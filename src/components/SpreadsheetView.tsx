@@ -872,73 +872,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
         )}
       </div>
 
-      {/* Batch Action Bar for Monthly Sheets */}
-      {availableMonths.includes(activeTab) && (
-        <div className={`px-4 py-2 border-b flex flex-wrap items-center justify-between gap-3 text-xs transition-colors ${
-          isLight ? 'bg-indigo-50/60 border-slate-200' : 'bg-indigo-950/20 border-slate-800/80'
-        }`}>
-          <div className="flex items-center gap-2">
-            <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-              {isEs ? 'Acciones Masivas de Estado:' : 'Batch Status Actions:'}
-            </span>
-            <span className={`text-[11px] font-mono px-2 py-0.5 rounded border ${
-              selectedRecordIds.size > 0
-                ? 'bg-indigo-600 text-white border-indigo-500 font-bold'
-                : isLight ? 'bg-slate-200 text-slate-700 border-slate-300' : 'bg-slate-800 text-slate-400 border-slate-700'
-            }`}>
-              {selectedRecordIds.size > 0 
-                ? (isEs ? `${selectedRecordIds.size} seleccionados` : `${selectedRecordIds.size} selected`) 
-                : (isEs ? `Todos los ${sortedMonthlyRecords.length} visibles` : `All ${sortedMonthlyRecords.length} visible`)}
-            </span>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              {isEs ? 'Fijar Asistencia:' : 'Set Attended:'}
-            </span>
-            <button
-              onClick={() => applyBatchUpdate(undefined, 'Yes')}
-              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md font-medium text-xs flex items-center gap-1 transition-colors shadow-sm"
-              title={isEs ? 'Marcar seleccionados/visibles como Presente' : 'Mark selected/visible as Present'}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {isEs ? 'Sí (Presente)' : 'Yes (Present)'}
-            </button>
-
-            <button
-              onClick={() => applyBatchUpdate(undefined, 'No')}
-              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-md font-medium text-xs flex items-center gap-1 transition-colors shadow-sm"
-              title={isEs ? 'Marcar seleccionados/visibles como Ausente' : 'Mark selected/visible as Absent'}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              {isEs ? 'No (Ausente)' : 'No (Absent)'}
-            </button>
-
-            <div className={`h-4 w-px mx-1 ${isLight ? 'bg-slate-300' : 'bg-slate-700'}`} />
-
-            <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              {isEs ? 'Fijar RSVP:' : 'Set RSVP:'}
-            </span>
-            <button
-              onClick={() => applyBatchUpdate('Yes', undefined)}
-              className={`px-2 py-1 rounded font-medium border text-xs transition-colors ${
-                isLight ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100' : 'bg-emerald-950 text-emerald-300 border-emerald-800 hover:bg-emerald-900'
-              }`}
-            >
-              RSVP Yes ({isEs ? 'Confirmado' : 'Confirmed'})
-            </button>
-
-            <button
-              onClick={() => applyBatchUpdate('No', undefined)}
-              className={`px-2 py-1 rounded font-medium border text-xs transition-colors ${
-                isLight ? 'bg-sky-50 text-sky-800 border-sky-300 hover:bg-sky-100' : 'bg-sky-950 text-sky-300 border-sky-800 hover:bg-sky-900'
-              }`}
-            >
-              RSVP No ({isEs ? 'Justificado' : 'Excused'})
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Tab 1: Master Summary Sheet */}
       {activeTab === 'Master Summary' && (
