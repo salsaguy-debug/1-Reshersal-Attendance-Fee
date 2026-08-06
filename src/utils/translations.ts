@@ -31,12 +31,20 @@ export const translations = {
     systemSubtitle: 'System 7.4.0 (SOP BTG Compliance Engine)',
     spreadsheetView: 'Spreadsheet View',
     reportsSuite: 'Reports & Email Suite',
-    checkinSimulator: 'Check-In Simulator',
+    checkinSimulator: 'Check-in Simulator',
     codeExporter: 'Code.gs Exporter',
     config: 'CONFIG',
     systemConfigTitle: 'System Configuration',
     syncButton: 'Sync (Rev 7.4)',
     syncing: 'Syncing...',
+    moreActions: 'More Actions',
+
+    // Dropdown Header & Sections
+    actionsToolsMenu: 'Actions & Tools Menu',
+    kpiSummaryMetrics: 'KPI Summary Metrics',
+    primaryActions: 'Primary Actions',
+    viewsTools: 'Views & Tools',
+    dataManagement: 'Data Management',
 
     // KPI Summary Cards
     companyOutstanding: 'Company Outstanding Fees',
@@ -44,13 +52,19 @@ export const translations = {
     activePerformers: 'Active Rehearsal Performers',
     excludedPerformers: 'Excluded Performers (Blocklist)',
 
-    // Navigation & Dropdown Sections
-    navigationViews: 'Navigation & View Switcher',
-    syncSopTools: 'Sync & SOP Compliance Tools',
-    dataManagement: 'Data Management',
-    runLiveSync: 'Run Live Sync',
-    viewSopRules: 'View Fee SOP Rules',
-    liveSheetImport: 'Live Sheet Import',
+    // Actions & Items
+    importLive: 'Import Live',
+    importLiveDesc: 'Import live attendance from CSV or Sheets',
+    syncRev74: 'Sync (Rev 7.4)',
+    syncRev74Desc: 'Run sync algorithm across Calendar & Forms',
+    forceUpdateMonths: 'Force Update & Refresh Months',
+    forceUpdateMonthsDesc: 'Recalculate all 12+ month sheets & sync...',
+    syncCalendarApi: 'Sync Google Calendar API',
+    syncCalendarApiDesc: 'Populate missing rehearsal dates from Calenda...',
+    saveBackupDrive: 'Save Backup to Google Drive',
+    saveBackupDriveDesc: 'Export current attendance spreadsheet to...',
+    feeSopEngine: 'Fee SOP Compliance Engine',
+    feeSopEngineDesc: 'View fee calculation rules & decision matrix',
     deleteAllTestData: 'Delete All Test Data',
     deleteAllTestDataDesc: 'Wipe all records, responses & exclusions',
     resetSampleData: 'Reset Sample Baseline Data',
@@ -70,6 +84,9 @@ export const translations = {
     formResponses: 'Form Responses 1',
     excludedTab: 'Excluded these Performers',
     aggregateTag: 'Aggregate',
+    googleSheetsLiveWorkbook: 'Google Sheets Live Workbook',
+    boundScript: 'Bound Script: activeSpreadsheet',
+    viewingSheetTab: 'Viewing sheet tab:',
 
     // Action Buttons
     addRecord: 'Add Record',
@@ -133,8 +150,8 @@ export const translations = {
   },
   es: {
     // Top Bar & App Titles
-    systemTitle: 'Rehearsal Absences',
-    systemSubtitle: 'Sistema 7.4.0 (Cumplimiento SOP BTG)',
+    systemTitle: 'Asistencia y Faltas a Ensayos',
+    systemSubtitle: 'Sistema 7.4.0 (Motor de Cumplimiento SOP BTG)',
     spreadsheetView: 'Vista de Hoja',
     reportsSuite: 'Reportes y Correo',
     checkinSimulator: 'Simulador de Asistencia',
@@ -143,6 +160,14 @@ export const translations = {
     systemConfigTitle: 'Configuración del Sistema',
     syncButton: 'Sincronizar (Rev 7.4)',
     syncing: 'Sincronizando...',
+    moreActions: 'Más Acciones',
+
+    // Dropdown Header & Sections
+    actionsToolsMenu: 'Menú de Acciones y Herramientas',
+    kpiSummaryMetrics: 'Métricas Resumen KPI',
+    primaryActions: 'Acciones Principales',
+    viewsTools: 'Vistas y Herramientas',
+    dataManagement: 'Gestión de Datos',
 
     // KPI Summary Cards
     companyOutstanding: 'Balance Pendiente de la Compañía',
@@ -150,13 +175,19 @@ export const translations = {
     activePerformers: 'Bailarines Activos en Ensayos',
     excludedPerformers: 'Bailarines Excluidos (Lista Negra)',
 
-    // Navigation & Dropdown Sections
-    navigationViews: 'Navegación y Vistas',
-    syncSopTools: 'Herramientas de Sincronización y SOP',
-    dataManagement: 'Gestión de Datos',
-    runLiveSync: 'Ejecutar Sincronización en Vivo',
-    viewSopRules: 'Ver Reglas SOP de Tarifas',
-    liveSheetImport: 'Importar Hoja en Vivo',
+    // Actions & Items
+    importLive: 'Importar en Vivo',
+    importLiveDesc: 'Importar datos de asistencia reales desde CSV o Hojas',
+    syncRev74: 'Sincronizar (Rev 7.4)',
+    syncRev74Desc: 'Ejecutar algoritmo de sincronización en Calendar y Formularios',
+    forceUpdateMonths: 'Forzar Actualización de Meses',
+    forceUpdateMonthsDesc: 'Recalcular todas las hojas de meses y sincronizar...',
+    syncCalendarApi: 'Sincronizar Google Calendar API',
+    syncCalendarApiDesc: 'Poblar fechas de ensayo faltantes desde Calendar...',
+    saveBackupDrive: 'Guardar Respaldo en Google Drive',
+    saveBackupDriveDesc: 'Exportar hoja de asistencia actual a Google Drive...',
+    feeSopEngine: 'Motor de Cumplimiento SOP de Tarifas',
+    feeSopEngineDesc: 'Ver reglas de cálculo de tarifas y matriz de decisión',
     deleteAllTestData: 'Eliminar Todos los Datos de Prueba',
     deleteAllTestDataDesc: 'Vaciar todas las listas, registros y exclusiones',
     resetSampleData: 'Restablecer Datos de Muestra',
@@ -172,10 +203,13 @@ export const translations = {
     allRsvps: 'Todos los RSVPs (Mostrar Todo)',
 
     // Tabs
-    masterSummary: 'Resumen Principal',
+    masterSummary: 'Resumen Maestro',
     formResponses: 'Respuestas de Formulario 1',
-    excludedTab: 'Excluidos de la Lista',
+    excludedTab: 'Integrantes Excluidos',
     aggregateTag: 'Agregado',
+    googleSheetsLiveWorkbook: 'Libro de Trabajo en Vivo de Google Sheets',
+    boundScript: 'Script Vinculado: activeSpreadsheet',
+    viewingSheetTab: 'Viendo la pestaña:',
 
     // Action Buttons
     addRecord: 'Agregar Registro',
@@ -192,7 +226,7 @@ export const translations = {
     performer: 'Bailarín/a',
     email: 'Correo Electrónico',
     totalBalance: 'Balance Total Anual',
-    status: 'Estado',
+    status: 'Estado de Cuenta',
     date: 'Fecha',
     day: 'Día',
     rsvp: 'Estado RSVP',
