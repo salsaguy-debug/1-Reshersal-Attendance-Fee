@@ -21,6 +21,8 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+firebase-applet-config.json
+firebase-applet-config*.json
 
 # OS and Editor files
 .DS_Store
