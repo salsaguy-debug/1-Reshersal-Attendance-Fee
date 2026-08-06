@@ -1016,6 +1016,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <img
               src={logoImg}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = './logo.png'; }}
               alt="Tradición Dance Co. Logo"
               className="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-indigo-500/30 shrink-0"
             />
