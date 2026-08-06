@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import logoImg from './assets/logo.jpg';
+import { PerformerDetailView, PaymentTransaction } from './components/PerformerDetailView';
 
 import {
   Performer,
@@ -141,7 +142,8 @@ export default function App() {
   });
 
   const [activeTab, setActiveTab] = useState<string>('Master Summary');
-  const [activeView, setActiveView] = useState<'sheet' | 'reports' | 'checkin' | 'script' | 'config'>('sheet');
+  const [activeView, setActiveView] = useState<'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config'>('sheet');
+  const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [showSopModal, setShowSopModal] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [syncStats, setSyncStats] = useState<SyncStats | null>(null);
@@ -1071,6 +1073,20 @@ export default function App() {
               <span>{t.spreadsheetView}</span>
             </button>
 
+            <button
+              onClick={() => setActiveView('performer')}
+              className={`px-4 py-2 rounded-2xl flex items-center gap-2 text-xs sm:text-sm font-bold transition-all shadow-xs border ${
+                activeView === 'performer'
+                  ? 'bg-slate-50/90 text-slate-900 border-slate-200/90 shadow-xs font-bold'
+                  : isLight
+                  ? 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
+                  : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
+              }`}
+            >
+              <Users className="w-4 h-4 text-indigo-400" />
+              <span>{t.byPerformer}</span>
+            </button>
+
             {/* "More Actions" Dropdown Button */}
             <MoreActionsDropdown
               onOpenLiveImport={() => setShowLiveImportModal(true)}
@@ -1181,6 +1197,28 @@ export default function App() {
             setActiveView={setActiveView}
             onResetData={resetAllDataToDefault}
             onOpenSopRules={() => setShowSopModal(true)}
+          />
+        )}
+
+        {activeView === 'performer' && (
+          <PerformerDetailView
+            performers={performers}
+            records={records}
+            exclusions={exclusions}
+            config={config}
+            theme={theme}
+            lang={lang}
+            onUpdateRecord={handleUpdateRecord}
+            onToggleExclusion={(email, name) => {
+              const isEx = exclusions.some(e => e.email.toLowerCase().trim() === email.toLowerCase().trim());
+              if (isEx) {
+                handleDeleteExclusion(email);
+              } else {
+                handleAddExclusion(email, name, 'Administrative Blocklist');
+              }
+            }}
+            payments={payments}
+            onAddPayment={pay => setPayments(prev => [pay, ...prev])}
           />
         )}
 

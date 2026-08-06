@@ -36,8 +36,8 @@ interface MoreActionsDropdownProps {
   onForceUpdateMonths?: () => void;
   onExportToDrive?: () => void;
   isSyncing: boolean;
-  activeView: 'sheet' | 'reports' | 'checkin' | 'script' | 'config';
-  setActiveView: (view: 'sheet' | 'reports' | 'checkin' | 'script' | 'config') => void;
+  activeView: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config';
+  setActiveView: (view: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config') => void;
   onResetData?: () => void;
   onDeleteAllTestData?: () => void;
   onOpenSopRules?: () => void;
@@ -92,7 +92,7 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
     };
   }, []);
 
-  const handleSelectView = (view: 'sheet' | 'reports' | 'checkin' | 'script' | 'config') => {
+  const handleSelectView = (view: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config') => {
     setActiveView(view);
     setIsOpen(false);
   };
@@ -443,6 +443,24 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
                 <span>{t.spreadsheetView}</span>
                 {activeView === 'sheet' && (
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" />
+                )}
+              </div>
+            </button>
+
+            {/* 4b. By Performer */}
+            <button
+              onClick={() => handleSelectView('performer')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                activeView === 'performer'
+                  ? isLight ? 'bg-indigo-50 border border-indigo-200 font-bold text-indigo-900' : 'bg-indigo-950/60 border border-indigo-800/80 text-white font-bold'
+                  : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-slate-800/60 text-slate-200'
+              }`}
+            >
+              <Users className="w-4 h-4 text-indigo-400 shrink-0" />
+              <div className="flex-1 flex items-center justify-between text-xs">
+                <span>{t.byPerformer}</span>
+                {activeView === 'performer' && (
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-xs" />
                 )}
               </div>
             </button>
