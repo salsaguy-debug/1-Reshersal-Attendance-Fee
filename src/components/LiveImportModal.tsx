@@ -616,6 +616,8 @@ temp.absence@tradiciondance.com,Temp Absence,Medical Leave,2026-04-15`;
               <div className="space-y-3 p-4 rounded-xl border border-slate-800 bg-slate-950/40">
                 <div className="flex gap-2">
                   <input
+                    id="live-import-sheet-url"
+                    name="sheetUrl"
                     type="url"
                     value={sheetUrl}
                     onChange={e => setSheetUrl(e.target.value)}
@@ -658,9 +660,11 @@ temp.absence@tradiciondance.com,Temp Absence,Medical Leave,2026-04-15`;
                 <p className="text-[11px] text-slate-400 mb-3">
                   {isEs ? 'o selecciona desde tu dispositivo' : 'or choose a file from your computer'}
                 </p>
-                <label className="inline-flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-lg cursor-pointer transition-colors border border-slate-700">
+                <label htmlFor="live-import-file-input" className="inline-flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-lg cursor-pointer transition-colors border border-slate-700">
                   {isEs ? 'Buscar Archivo' : 'Browse Files'}
                   <input
+                    id="live-import-file-input"
+                    name="fileUploadInput"
                     type="file"
                     accept=".csv,.tsv,.json,.txt"
                     onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
@@ -687,6 +691,8 @@ temp.absence@tradiciondance.com,Temp Absence,Medical Leave,2026-04-15`;
                   </button>
                 </div>
                 <textarea
+                  id="live-import-raw-text"
+                  name="rawTextImport"
                   value={rawText}
                   onChange={e => setRawText(e.target.value)}
                   rows={5}
@@ -709,6 +715,8 @@ temp.absence@tradiciondance.com,Temp Absence,Medical Leave,2026-04-15`;
               <div className="space-y-3 p-4 rounded-xl border border-slate-800 bg-slate-950/40">
                 <div className="flex gap-2">
                   <input
+                    id="live-import-webapp-url"
+                    name="webAppUrl"
                     type="url"
                     value={webAppUrl}
                     onChange={e => setWebAppUrl(e.target.value)}

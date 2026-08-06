@@ -1011,7 +1011,7 @@ export default function App() {
       <header className={`border-b sticky top-0 z-40 shadow-xl transition-colors ${
         isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-900 border-slate-800 text-slate-100'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
           {/* Company Brand Title */}
           <div className="flex items-center gap-3">
             <img

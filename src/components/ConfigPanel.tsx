@@ -85,13 +85,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       <form onSubmit={handleSave} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
+            <label htmlFor="config-calendar-id" className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
               isLight ? 'text-slate-700' : 'text-slate-400'
             }`}>
               <Calendar className="w-3.5 h-3.5 text-indigo-500" />
               {isEs ? 'ID de Google Calendar (CAL_ID)' : 'Google Calendar ID (CAL_ID)'}
             </label>
             <input
+              id="config-calendar-id"
+              name="calendarId"
               type="text"
               value={calId}
               onChange={e => setCalId(e.target.value)}
@@ -108,13 +110,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           </div>
 
           <div>
-            <label className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
+            <label htmlFor="config-admin-emails" className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
               isLight ? 'text-slate-700' : 'text-slate-400'
             }`}>
               <Mail className="w-3.5 h-3.5 text-indigo-500" />
               {isEs ? 'Lista de Contactos Administradores (Separados por coma)' : 'Administrator Email Contact List (Comma-Separated)'}
             </label>
             <input
+              id="config-admin-emails"
+              name="adminEmails"
               type="text"
               value={adminEmailsText}
               onChange={e => setAdminEmailsText(e.target.value)}
@@ -135,13 +139,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           isLight ? 'border-slate-200' : 'border-slate-800/80'
         }`}>
           <div>
-            <label className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
+            <label htmlFor="config-baseline-date" className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
               isLight ? 'text-slate-700' : 'text-slate-400'
             }`}>
               <Shield className="w-3.5 h-3.5 text-indigo-500" />
               {isEs ? 'Fecha Base de Sincronización' : 'Baseline Configuration Sync Date'}
             </label>
             <input
+              id="config-baseline-date"
+              name="baselineDate"
               type="date"
               value={baselineDate}
               onChange={e => setBaselineDate(e.target.value)}
@@ -152,13 +158,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           </div>
 
           <div>
-            <label className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
+            <label htmlFor="config-unconfirmed-fee" className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
               isLight ? 'text-slate-700' : 'text-slate-400'
             }`}>
               <DollarSign className="w-3.5 h-3.5 text-amber-500" />
               {isEs ? 'Tarifa por Sin Confirmar ($)' : 'Unconfirmed Status Penalty ($)'}
             </label>
             <input
+              id="config-unconfirmed-fee"
+              name="unconfirmedFee"
               type="number"
               value={unconfirmedFee}
               onChange={e => setUnconfirmedFee(Number(e.target.value))}
@@ -172,13 +180,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           </div>
 
           <div>
-            <label className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
+            <label htmlFor="config-noshow-penalty" className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
               isLight ? 'text-slate-700' : 'text-slate-400'
             }`}>
               <DollarSign className="w-3.5 h-3.5 text-rose-500" />
               {isEs ? 'Tarifa por Inasistencia ($)' : 'No-Show Penalty ($)'}
             </label>
             <input
+              id="config-noshow-penalty"
+              name="noShowPenalty"
               type="number"
               value={noShowPenalty}
               onChange={e => setNoShowPenalty(Number(e.target.value))}

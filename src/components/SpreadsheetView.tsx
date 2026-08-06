@@ -791,6 +791,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
           <div className="relative w-full sm:w-64">
             <Search className={`w-3.5 h-3.5 absolute left-3 top-2.5 ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
             <input
+              id="spreadsheet-search-input"
+              name="spreadsheetSearch"
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -808,6 +810,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                 selectedEmailFilter ? 'text-indigo-500 font-bold' : isLight ? 'text-slate-400' : 'text-slate-500'
               }`} />
               <select
+                id="spreadsheet-email-filter"
+                name="emailFilter"
                 value={selectedEmailFilter}
                 onChange={e => setSelectedEmailFilter(e.target.value)}
                 className={`w-full border rounded-lg pl-9 pr-7 py-1.5 focus:outline-none focus:border-indigo-500 text-xs appearance-none font-medium transition-colors ${
@@ -850,6 +854,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               <Filter className={`w-3.5 h-3.5 ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
               <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{isEs ? 'RSVP:' : 'RSVP:'}</span>
               <select
+                id="spreadsheet-rsvp-filter"
+                name="rsvpFilter"
                 value={rsvpFilter}
                 onChange={e => setRsvpFilter(e.target.value)}
                 className={`border rounded-lg px-2.5 py-1 focus:outline-none focus:border-indigo-500 text-xs font-semibold transition-colors ${
@@ -868,6 +874,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
             <div className="flex items-center gap-1.5">
               <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{isEs ? 'Asistencia:' : 'Attended:'}</span>
               <select
+                id="spreadsheet-attended-filter"
+                name="attendedFilter"
                 value={attendedFilter}
                 onChange={e => setAttendedFilter(e.target.value)}
                 className={`border rounded-lg px-2.5 py-1 focus:outline-none focus:border-indigo-500 text-xs font-semibold transition-colors ${
@@ -987,6 +995,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               }`}>
                 <th className="p-3 w-8 text-center">
                   <input
+                    id="select-all-records-checkbox"
+                    name="selectAllRecords"
                     type="checkbox"
                     checked={selectedRecordIds.size > 0 && selectedRecordIds.size >= sortedMonthlyRecords.length}
                     onChange={toggleSelectAllVisible}
@@ -1025,6 +1035,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                     }`}>
                       <td className="p-3 text-center">
                         <input
+                          id={`select-record-${rec.id}`}
+                          name={`selectRecord_${rec.id}`}
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectRecord(rec.id)}
@@ -1038,6 +1050,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                       {/* Interactive RSVP Status Editor */}
                       <td className="p-3">
                         <select
+                          id={`record-rsvp-${rec.id}`}
+                          name={`recordRsvp_${rec.id}`}
                           value={rec.rsvp}
                           onChange={e => onUpdateRecord(rec.id, e.target.value as RsvpStatus, rec.attended)}
                           className={`border rounded-md px-2.5 py-1.5 font-bold text-xs focus:outline-none cursor-pointer transition-all shadow-sm ${
@@ -1067,6 +1081,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                       {/* Interactive Attended Editor */}
                       <td className="p-3">
                         <select
+                          id={`record-attended-${rec.id}`}
+                          name={`recordAttended_${rec.id}`}
                           value={rec.attended}
                           onChange={e => onUpdateRecord(rec.id, rec.rsvp, e.target.value as AttendedStatus)}
                           className={`border rounded-md px-2.5 py-1.5 font-bold text-xs focus:outline-none cursor-pointer transition-all shadow-sm ${
@@ -1275,10 +1291,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
 
             <form onSubmit={handleCreateRecord} className="space-y-4 text-xs">
               <div>
-                <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                  {isEs ? 'Fecha de Ensayo' : 'Rehearsal Date'}
+                <label htmlFor="add-record-date" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  {isEs ? 'Fecha del Ensayo' : 'Rehearsal Date'}
                 </label>
                 <input
+                  id="add-record-date"
+                  name="addRecordDate"
                   type="date"
                   value={newDate}
                   onChange={e => setNewDate(e.target.value)}
@@ -1290,10 +1308,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               </div>
 
               <div>
-                <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <label htmlFor="add-record-name" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   {isEs ? 'Nombre Completo del Integrante' : 'Performer Full Name'}
                 </label>
                 <input
+                  id="add-record-name"
+                  name="addRecordName"
                   type="text"
                   placeholder="e.g. Sofia Rodriguez"
                   value={newName}
@@ -1306,10 +1326,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               </div>
 
               <div>
-                <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <label htmlFor="add-record-email" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   {isEs ? 'Correo Electrónico del Integrante' : 'Performer Email Address'}
                 </label>
                 <input
+                  id="add-record-email"
+                  name="addRecordEmail"
                   type="email"
                   placeholder="sofia@tradiciondance.org"
                   value={newEmail}
@@ -1323,10 +1345,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <label htmlFor="add-record-rsvp" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                     {isEs ? 'Estado RSVP (Calendario)' : 'Calendar RSVP Status'}
                   </label>
                   <select
+                    id="add-record-rsvp"
+                    name="addRecordRsvp"
                     value={newRsvp}
                     onChange={e => setNewRsvp(e.target.value as RsvpStatus)}
                     className={`w-full border rounded-lg p-2 font-semibold ${
@@ -1341,10 +1365,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                 </div>
 
                 <div>
-                  <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <label htmlFor="add-record-attended" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                     {isEs ? 'Asistencia (Registro)' : 'Attended Status'}
                   </label>
                   <select
+                    id="add-record-attended"
+                    name="addRecordAttended"
                     value={newAttended}
                     onChange={e => setNewAttended(e.target.value as AttendedStatus)}
                     className={`w-full border rounded-lg p-2 font-semibold ${
@@ -1400,10 +1426,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
 
             <form onSubmit={handleCreateExclusion} className="space-y-4 text-xs">
               <div>
-                <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <label htmlFor="exclusion-email" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   {isEs ? 'Correo Electrónico (Columna A)' : 'Email Address (Column A)'}
                 </label>
                 <input
+                  id="exclusion-email"
+                  name="exclusionEmail"
                   type="email"
                   placeholder="performer@example.com"
                   value={exEmail}
@@ -1416,10 +1444,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               </div>
 
               <div>
-                <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <label htmlFor="exclusion-name" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   {isEs ? 'Nombre del Integrante' : 'Performer Name'}
                 </label>
                 <input
+                  id="exclusion-name"
+                  name="exclusionName"
                   type="text"
                   placeholder="Full Name"
                   value={exName}
@@ -1431,10 +1461,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               </div>
 
               <div>
-                <label className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <label htmlFor="exclusion-reason" className={`block font-medium mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   {isEs ? 'Motivo de Exclusión' : 'Exclusion Reason'}
                 </label>
                 <input
+                  id="exclusion-reason"
+                  name="exclusionReason"
                   type="text"
                   placeholder="e.g. Resigned, Leave of Absence, Administrative Block"
                   value={exReason}
@@ -1523,9 +1555,11 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                   <span className="text-purple-500 font-mono">.csv</span> {isEs ? 'o' : 'or'} <span className="text-purple-500 font-mono">.txt</span> {isEs ? 'aquí' : 'here'}
                 </div>
                 <div className={`text-[11px] flex items-center gap-3 ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
-                  <label className="cursor-pointer text-purple-600 hover:text-purple-500 font-semibold underline underline-offset-2">
+                  <label htmlFor="bulk-exclusion-file-input" className="cursor-pointer text-purple-600 hover:text-purple-500 font-semibold underline underline-offset-2">
                     {isEs ? 'Examinar archivos' : 'Browse Files'}
                     <input
+                      id="bulk-exclusion-file-input"
+                      name="bulkExclusionFileInput"
                       type="file"
                       accept=".csv,.txt"
                       className="hidden"
@@ -1551,10 +1585,12 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               {/* Default Reason & CSV Textarea */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="md:col-span-1">
-                  <label className={`block font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+                  <label htmlFor="bulk-default-reason" className={`block font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
                     {isEs ? 'Motivo de Exclusión Predeterminado' : 'Default Exclusion Reason'}
                   </label>
                   <input
+                    id="bulk-default-reason"
+                    name="bulkDefaultReason"
                     type="text"
                     value={defaultReason}
                     onChange={e => setDefaultReason(e.target.value)}
@@ -1570,7 +1606,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
 
                 <div className="md:col-span-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className={`block font-semibold ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+                    <label htmlFor="bulk-csv-textarea" className={`block font-semibold ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
                       {isEs ? 'Pegar Contenido CSV (Col A: Correo, B: Nombre, C: Motivo)' : 'Paste CSV Content (Col A: Email, B: Name, C: Reason)'}
                     </label>
                     {bulkCsvText && (
@@ -1584,6 +1620,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                     )}
                   </div>
                   <textarea
+                    id="bulk-csv-textarea"
+                    name="bulkCsvText"
                     rows={5}
                     value={bulkCsvText}
                     onChange={e => setBulkCsvText(e.target.value)}

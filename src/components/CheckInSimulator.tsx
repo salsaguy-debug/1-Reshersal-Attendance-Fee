@@ -75,13 +75,15 @@ export const CheckInSimulator: React.FC<CheckInSimulatorProps> = ({
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
         <div>
-          <label className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
+          <label htmlFor="sim-performer-select" className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
             isLight ? 'text-slate-600' : 'text-slate-400'
           }`}>
             <User className="w-3.5 h-3.5 text-indigo-500" />
             {isEs ? 'Seleccionar Bailarín/a' : 'Select Performer'}
           </label>
           <select
+            id="sim-performer-select"
+            name="simPerformerEmail"
             value={selectedPerformerEmail}
             onChange={e => setSelectedPerformerEmail(e.target.value)}
             className={`w-full border rounded-lg p-2.5 focus:outline-none focus:border-indigo-500 ${
@@ -97,13 +99,15 @@ export const CheckInSimulator: React.FC<CheckInSimulatorProps> = ({
         </div>
 
         <div>
-          <label className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
+          <label htmlFor="sim-practice-date-select" className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
             isLight ? 'text-slate-600' : 'text-slate-400'
           }`}>
             <Calendar className="w-3.5 h-3.5 text-indigo-500" />
             {isEs ? 'Fecha de Ensayo' : 'Practice Date'}
           </label>
           <select
+            id="sim-practice-date-select"
+            name="simPracticeDate"
             value={selectedPracticeDate}
             onChange={e => setSelectedPracticeDate(e.target.value)}
             className={`w-full border rounded-lg p-2.5 focus:outline-none focus:border-indigo-500 font-mono ${
@@ -119,13 +123,15 @@ export const CheckInSimulator: React.FC<CheckInSimulatorProps> = ({
         </div>
 
         <div>
-          <label className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
+          <label htmlFor="sim-rsvp-status-select" className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
             isLight ? 'text-slate-600' : 'text-slate-400'
           }`}>
             <HelpCircle className="w-3.5 h-3.5 text-indigo-500" />
             {isEs ? 'Estado RSVP (Google Form)' : 'RSVP Status (Form)'}
           </label>
           <select
+            id="sim-rsvp-status-select"
+            name="simRsvpStatus"
             value={rsvpStatus}
             onChange={e => setRsvpStatus(e.target.value as RsvpStatus)}
             className={`w-full border rounded-lg p-2.5 focus:outline-none focus:border-indigo-500 ${
@@ -140,13 +146,15 @@ export const CheckInSimulator: React.FC<CheckInSimulatorProps> = ({
         </div>
 
         <div>
-          <label className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
+          <label htmlFor="sim-checkin-status-select" className={`block font-medium mb-1.5 flex items-center gap-1.5 ${
             isLight ? 'text-slate-600' : 'text-slate-400'
           }`}>
             <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
             {isEs ? 'Asistencia Física (Presencia)' : 'Physical Attendance'}
           </label>
           <select
+            id="sim-checkin-status-select"
+            name="simCheckInStatus"
             value={checkInStatus}
             onChange={e => setCheckInStatus(e.target.value as 'Yes' | 'No')}
             className={`w-full border rounded-lg p-2.5 focus:outline-none focus:border-indigo-500 ${
