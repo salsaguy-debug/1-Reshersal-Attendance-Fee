@@ -1,0 +1,6 @@
+{
+  "name": "Tradición Dance Co. Attendance & Fee Automation",
+  "description": "Automated rehearsal attendance, guest list tracking, RSVP monitoring, dynamic exclusions, and fee calculation system (BTG REV 7.4) for Tradición Dance Co.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
