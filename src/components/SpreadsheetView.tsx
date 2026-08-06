@@ -29,6 +29,7 @@ import {
   MasterSummaryRow,
   FormResponseRecord,
   ExcludedPerformer,
+  Performer,
   RsvpStatus,
   AttendedStatus
 } from '../types';
@@ -40,17 +41,27 @@ interface SpreadsheetViewProps {
   formResponses: FormResponseRecord[];
   exclusions: ExcludedPerformer[];
   availableMonths: string[];
+  performers?: Performer[];
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
   onUpdateRecord: (id: string, rsvp: RsvpStatus, attended: AttendedStatus) => void;
   onBatchUpdateRecords?: (ids: string[], updates: { rsvp?: RsvpStatus; attended?: AttendedStatus }) => void;
   onDeleteRecord: (id: string) => void;
-  onCreateRecord: (rec: Omit<AttendanceRecord, 'id' | 'fees'>) => void;
+  onCreateRecord?: (rec: Omit<AttendanceRecord, 'id' | 'fees'>) => void;
+  onAddRecord?: (monthKey: string, rec: Omit<AttendanceRecord, 'id' | 'fees'>) => void;
   onAddExclusion: (email: string, name?: string, reason?: string) => void;
   onDeleteExclusion: (email: string) => void;
   onBulkAddExclusions: (items: { email: string; name?: string; reason?: string }[]) => void;
   onPurgeExclusions: () => void;
   onForceUpdateMonths?: () => void;
   onRunSync?: () => void;
+  onOpenLiveImport?: () => void;
   onAddMonthTab?: (month: string) => void;
+  activeView?: 'sheet' | 'reports' | 'checkin' | 'script' | 'config';
+  setActiveView?: (view: 'sheet' | 'reports' | 'checkin' | 'script' | 'config') => void;
+  onOpenSopRules?: () => void;
+  onResetData?: () => void;
+  onDeleteAllTestData?: () => void;
   isSyncing?: boolean;
   theme?: 'dark' | 'light';
   lang?: Language;
@@ -473,7 +484,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
     const day = dayNames[dateObj.getDay()];
 
     onCreateRecord({
-      monthTab: activeTab,
+      monthKey: activeTab,
       date: newDate,
       day,
       performerName: newName,

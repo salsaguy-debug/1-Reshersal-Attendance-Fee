@@ -26,7 +26,7 @@ interface LiveImportModalProps {
   lang?: Language;
   feeRules?: {
     excusedFee: number;
-    unannouncedFee: number;
+    unannouncedFee?: number;
     unconfirmedFee: number;
     noShowPenalty: number;
     verifiedFee: number;
