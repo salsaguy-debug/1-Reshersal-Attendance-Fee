@@ -17,7 +17,8 @@ import {
   Trash2,
   RotateCcw,
   Calendar,
-  HardDrive
+  HardDrive,
+  BookOpen
 } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
 
@@ -115,28 +116,28 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
-      {/* Trigger Button: "More Actions" / "Más Acciones" */}
+      {/* Trigger Button: "More Actions" / "Más Acciones" matching attached image */}
       <button
         onClick={() => setIsOpen(prev => !prev)}
-        className={`flex items-center gap-2 font-bold transition-all rounded-xl shadow-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
+        className={`flex items-center gap-2 font-bold transition-all rounded-2xl shadow-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
           buttonSize === 'compact'
             ? 'px-3 py-1.5 text-xs'
-            : 'px-3.5 py-2 text-xs'
+            : 'px-4 py-2 text-xs sm:text-sm'
         } ${
           isOpen
             ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/20'
             : isLight
-            ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-200 shadow-slate-200/50'
-            : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 shadow-indigo-500/30'
+            ? 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 shadow-sm'
+            : 'bg-slate-900 hover:bg-slate-800 text-slate-100 border-slate-700'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <Layers className={`w-4 h-4 ${isOpen ? 'text-white' : 'text-indigo-400'}`} />
+        <Layers className={`w-4 h-4 ${isOpen ? 'text-white' : 'text-indigo-600'}`} />
         <span>{t.moreActions}</span>
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-white' : 'text-slate-300'
+            isOpen ? 'rotate-180 text-white' : 'text-slate-400'
           }`}
         />
       </button>
@@ -247,6 +248,32 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
             <div className="px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-mono">
               {t.primaryActions}
             </div>
+
+            {/* User Guide & System SOP */}
+            {onOpenSopRules && (
+              <button
+                onClick={() => {
+                  onOpenSopRules();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-blue-50 text-slate-800' : 'hover:bg-blue-950/40 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 mt-0.5 shrink-0">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-blue-500 flex items-center justify-between">
+                    <span>{t.userGuide}</span>
+                    <span className="text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono font-bold">Guide</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {t.userGuideDesc}
+                  </p>
+                </div>
+              </button>
+            )}
 
             {/* 1. Import Live Data */}
             <button

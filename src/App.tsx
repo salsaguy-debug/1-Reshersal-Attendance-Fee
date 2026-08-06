@@ -1054,15 +1054,15 @@ export default function App() {
           <nav className="flex items-center gap-2">
             <button
               onClick={() => setActiveView('sheet')}
-              className={`px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-sm border ${
+              className={`px-4 py-2 rounded-2xl flex items-center gap-2 text-xs sm:text-sm font-bold transition-all shadow-xs border ${
                 activeView === 'sheet'
-                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/20'
+                  ? 'bg-slate-50/90 text-slate-900 border-slate-200/90 shadow-xs font-bold'
                   : isLight
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  ? 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
                   : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
               }`}
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
               <span>{t.spreadsheetView}</span>
             </button>
 
@@ -1085,59 +1085,51 @@ export default function App() {
             />
           </nav>
 
-          {/* Right Header Utilities: Language Toggle, System Settings, Day/Night Toggle */}
-          <div className="flex items-center gap-2">
-            {/* Language Toggle (EN / ES) */}
-            <div className={`flex items-center p-0.5 rounded-xl border text-xs font-semibold ${
-              isLight ? 'bg-slate-100 border-slate-300' : 'bg-slate-950 border-slate-800'
+          {/* Right Header Utilities: Language Toggle, System Settings, Day/Night Toggle matching image */}
+          <div className="flex items-center gap-2.5">
+            {/* Language Toggle (EN / ES) matching attached image pill format */}
+            <div className={`flex items-center p-1 rounded-2xl border text-xs font-semibold shadow-xs ${
+              isLight ? 'bg-slate-100/90 border-slate-200/90' : 'bg-slate-950 border-slate-800'
             }`}>
               <button
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all ${
+                className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${
                   lang === 'en'
-                    ? 'bg-indigo-600 text-white shadow font-bold'
+                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
                     : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
                 title="Switch to English"
               >
-                <span>🇺🇸</span> EN
+                <span className="text-[10px] font-bold lowercase tracking-tight opacity-90 font-mono">us</span>
+                <span className="font-extrabold">EN</span>
               </button>
               <button
                 onClick={() => setLang('es')}
-                className={`px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all ${
+                className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${
                   lang === 'es'
-                    ? 'bg-indigo-600 text-white shadow font-bold'
+                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
                     : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
                 title="Cambiar a Español"
               >
-                <span>🇲🇽</span> ES
+                <span className="text-[10px] font-bold lowercase tracking-tight opacity-90 font-mono">mx</span>
+                <span className="font-extrabold">ES</span>
               </button>
             </div>
 
-            {/* System Settings Button (Config) */}
+            {/* System Settings Button (Config) - Solid indigo/purple button matching image */}
             <button
               onClick={() => setActiveView(prev => prev === 'config' ? 'sheet' : 'config')}
-              className={`p-2.5 rounded-xl border flex items-center justify-center transition-all shadow-sm ${
-                activeView === 'config'
-                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/20 ring-2 ring-indigo-500/30 font-bold'
-                  : isLight
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                  : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
-              }`}
+              className="p-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 shadow-md flex items-center justify-center transition-all"
               title={lang === 'es' ? 'Configuración del Sistema' : 'System Configuration Settings'}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-4 h-4 text-white" />
             </button>
 
-            {/* Day / Night Mode Toggle (Icon Only) */}
+            {/* Day / Night Mode Toggle - Soft amber button matching image */}
             <button
               onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-              className={`p-2.5 rounded-xl border flex items-center justify-center transition-all shadow-sm ${
-                isLight
-                  ? 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900'
-                  : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
-              }`}
+              className="p-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200/90 text-amber-500 shadow-xs flex items-center justify-center transition-all"
               title={isLight ? 'Switch to Night Mode' : 'Switch to Day Mode'}
             >
               {isLight ? (
