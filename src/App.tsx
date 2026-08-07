@@ -64,6 +64,7 @@ import { LiveImportModal } from './components/LiveImportModal';
 import { MoreActionsDropdown } from './components/MoreActionsDropdown';
 import { SyncSummaryModal, SyncStats } from './components/SyncSummaryModal';
 import { CalculatorWidget } from './components/CalculatorWidget';
+import { fetchLiveGoogleSheetData } from './utils/googleSheetClient';
 
 export default function App() {
   const [config, setConfig] = useState<SystemConfig>(() => {
@@ -618,16 +619,27 @@ export default function App() {
       let activeFormResponses = formResponses;
       try {
         const sheetTargetId = config.googleSheetId || '19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk';
-        const sheetRes = await fetch(`/api/sheet/live-sync?sheetId=${sheetTargetId}`);
-        if (sheetRes.ok) {
-          const sheetData = await sheetRes.json();
-          if (sheetData.success && Array.isArray(sheetData.formResponses) && sheetData.formResponses.length > 0) {
-            activeFormResponses = sheetData.formResponses;
-            setFormResponses(sheetData.formResponses);
+        let directResponses: any[] = [];
+        try {
+          const sheetRes = await fetch(`/api/sheet/live-sync?sheetId=${sheetTargetId}`);
+          if (sheetRes.ok) {
+            const sheetData = await sheetRes.json();
+            if (sheetData.success && Array.isArray(sheetData.formResponses)) {
+              directResponses = sheetData.formResponses;
+            }
           }
+        } catch {}
+
+        if (directResponses.length === 0) {
+          directResponses = await fetchLiveGoogleSheetData(sheetTargetId);
+        }
+
+        if (directResponses.length > 0) {
+          activeFormResponses = directResponses;
+          setFormResponses(directResponses);
         }
       } catch (err) {
-        console.warn('Direct Google Sheet fetch fallback to active state:', err);
+        console.warn('Direct Google Sheet fetch fallback:', err);
       }
 
       // 1. Load Exclusions and Purge
