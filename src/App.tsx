@@ -70,7 +70,16 @@ export default function App() {
   const [config, setConfig] = useState<SystemConfig>(() => {
     try {
       const saved = localStorage.getItem('tradicion_config');
-      return saved ? JSON.parse(saved) : INITIAL_CONFIG;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...INITIAL_CONFIG,
+          ...parsed,
+          googleSheetId: parsed.googleSheetId || INITIAL_CONFIG.googleSheetId,
+          googleSheetUrl: parsed.googleSheetUrl || INITIAL_CONFIG.googleSheetUrl
+        };
+      }
+      return INITIAL_CONFIG;
     } catch {
       return INITIAL_CONFIG;
     }
