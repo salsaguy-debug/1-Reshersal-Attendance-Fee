@@ -110,7 +110,11 @@ export default function App() {
   const [records, setRecords] = useState<AttendanceRecord[]>(() => {
     try {
       const saved = localStorage.getItem('tradicion_records');
-      return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE_RECORDS;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_ATTENDANCE_RECORDS;
+      const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
+      return Array.isArray(parsed)
+        ? parsed.filter((r: AttendanceRecord) => !legacySat.has(r.date) && r.day !== 'Sat' && r.day !== 'Saturday')
+        : INITIAL_ATTENDANCE_RECORDS;
     } catch {
       return INITIAL_ATTENDANCE_RECORDS;
     }
@@ -171,7 +175,10 @@ export default function App() {
             const sData = json.data;
             isRemoteUpdating.current = true;
             if (sData.config) setConfig(sData.config);
-            if (Array.isArray(sData.records) && sData.records.length > 0) setRecords(sData.records);
+            if (Array.isArray(sData.records) && sData.records.length > 0) {
+              const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
+              setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date)));
+            }
             if (Array.isArray(sData.formResponses) && sData.formResponses.length > 0) setFormResponses(sData.formResponses);
             if (Array.isArray(sData.exclusions) && sData.exclusions.length > 0) setExclusions(sData.exclusions);
             if (Array.isArray(sData.reportLogs) && sData.reportLogs.length > 0) setReportLogs(sData.reportLogs);
@@ -189,6 +196,9 @@ export default function App() {
     };
 
     fetchSharedData();
+    // Instant Scrub of Legacy Saturday Fallback Dates
+    const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
+    setRecords(prev => prev.filter(r => !legacySat.has(r.date)));
   }, []);
 
   // Helper to extract & sync unique performers list from attendance records and form responses
@@ -496,9 +506,11 @@ export default function App() {
         baseline
       );
 
-      // 2. Normalize and ensure all records have valid monthKey properties, filtering out records prior to baselineDate
+      // 2. Normalize and ensure all records have valid monthKey properties, filtering out records prior to baselineDate and fake legacy Saturdays
+      const legacySaturdayDates = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
       const normalizedRecords = baseRecords
         .filter(r => !r.date || r.date >= baseline)
+        .filter(r => !legacySaturdayDates.has(r.date))
         .map(r => {
           let monthKey = r.monthKey;
           if (!monthKey && r.date) {
@@ -645,7 +657,7 @@ export default function App() {
         } catch {}
         if (!monthKey) monthKey = 'August 2026';
 
-        let dayOfWeek = 'Sat';
+        let dayOfWeek = 'Mon';
         try {
           const parts = fr.practiceDate.split('-').map(Number);
           if (parts.length === 3) {
@@ -682,9 +694,11 @@ export default function App() {
         }
       });
 
-      // 3. Filter out excluded performers and recalculate fees
+      // 3. Filter out excluded performers and legacy fake Saturday dates, then recalculate fees
+      const legacySaturdayDates = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
       const updated = Array.from(recordMap.values())
         .filter(r => !excludedEmails.has(r.performerEmail.toLowerCase().trim()))
+        .filter(r => !legacySaturdayDates.has(r.date))
         .map(r => {
           const fee = calculateSopFee(r.rsvp, r.attended);
           return {

@@ -487,32 +487,6 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
               </button>
             )}
 
-            {/* Google Calendar API Sync */}
-            {onSyncCalendarEvents && (
-              <button
-                onClick={() => {
-                  onSyncCalendarEvents();
-                  setIsOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
-                  isLight ? 'hover:bg-sky-50 text-slate-800' : 'hover:bg-sky-950/40 text-slate-100'
-                }`}
-              >
-                <div className="p-2 rounded-xl bg-sky-500/10 text-sky-500 border border-sky-500/20 mt-0.5 shrink-0">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-xs text-sky-500 flex items-center justify-between">
-                    <span>{t.syncCalendarApi}</span>
-                    <span className="text-[10px] bg-sky-500/20 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded font-mono font-medium">Calendar API</span>
-                  </div>
-                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    {t.syncCalendarApiDesc}
-                  </p>
-                </div>
-              </button>
-            )}
-
             {/* Google Drive Export & Backup */}
             {onExportToDrive && (
               <button
@@ -640,24 +614,6 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
                 <span>{t.reportsSuite}</span>
                 {activeView === 'reports' && (
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-xs" />
-                )}
-              </div>
-            </button>
-
-            {/* 7. Code Exporter (Code.gs) */}
-            <button
-              onClick={() => handleSelectView('script')}
-              className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
-                activeView === 'script'
-                  ? isLight ? 'bg-indigo-50 border border-indigo-200 font-bold text-indigo-900' : 'bg-indigo-950/60 border border-indigo-800/80 text-white font-bold'
-                  : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-slate-800/60 text-slate-200'
-              }`}
-            >
-              <Code2 className="w-4 h-4 text-purple-400 shrink-0" />
-              <div className="flex-1 flex items-center justify-between text-xs">
-                <span>{t.codeExporter}</span>
-                {activeView === 'script' && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-xs" />
                 )}
               </div>
             </button>
