@@ -1619,18 +1619,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating Action Button (FAB): Pop-up Calculator Widget */}
-      <button
-        onClick={() => setShowCalculator(true)}
-        className="fixed bottom-6 right-6 z-40 p-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-2xl hover:scale-105 transition-all ring-4 ring-indigo-500/20 flex items-center gap-2 font-bold text-xs group"
-        title={lang === 'es' ? 'Abrir Calculadora de Cuotas SOP' : 'Open Fee & Attendance Calculator'}
-      >
-        <Calculator className="w-5 h-5" />
-        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap">
-          {lang === 'es' ? 'Calculadora' : 'Calculator'}
-        </span>
-      </button>
-
       {/* Popup Fee & Attendance Calculator Widget */}
       <CalculatorWidget
         isOpen={showCalculator}
