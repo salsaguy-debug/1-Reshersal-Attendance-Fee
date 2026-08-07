@@ -21,6 +21,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   const isLight = theme === 'light';
   const isEs = lang === 'es';
   const [calId, setCalId] = useState(config.calendarId);
+  const [sheetId, setSheetId] = useState(config.googleSheetId || '19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk');
+  const [sheetUrl, setSheetUrl] = useState(config.googleSheetUrl || 'https://docs.google.com/spreadsheets/d/19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk/edit?usp=sharing');
   const [adminEmailsText, setAdminEmailsText] = useState(config.adminEmails.join(', '));
   const [baselineDate, setBaselineDate] = useState(config.baselineDate);
 
@@ -40,6 +42,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
     onUpdateConfig({
       ...config,
       calendarId: calId,
+      googleSheetId: sheetId.trim(),
+      googleSheetUrl: sheetUrl.trim(),
       adminEmails: emails,
       baselineDate,
       feeRules: {
@@ -131,6 +135,74 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               {isEs 
                 ? 'Recibe los reportes financieros semanales y mensuales automatizados.'
                 : 'Receives automated Weekly and Monthly financial reports.'}
+            </span>
+          </div>
+        </div>
+
+        {/* Live Google Sheet ID & Shared URL Section */}
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t ${
+          isLight ? 'border-slate-200' : 'border-slate-800/80'
+        }`}>
+          <div>
+            <label htmlFor="config-sheet-id" className={`block font-semibold mb-1.5 flex items-center gap-1.5 ${
+              isLight ? 'text-slate-700' : 'text-slate-400'
+            }`}>
+              <Database className="w-3.5 h-3.5 text-emerald-500" />
+              {isEs ? 'ID de Google Sheet Compartida (SHEET_ID)' : 'Live Google Sheet ID (SHEET_ID)'}
+            </label>
+            <input
+              id="config-sheet-id"
+              name="sheetId"
+              type="text"
+              value={sheetId}
+              onChange={e => setSheetId(e.target.value)}
+              className={`w-full border rounded-lg p-2.5 font-mono text-xs focus:outline-none focus:border-emerald-500 ${
+                isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-slate-200'
+              }`}
+              placeholder="19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk"
+              required
+            />
+            <span className={`text-[11px] mt-1 block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+              {isEs 
+                ? 'ID de la hoja de cálculo de Google activa de donde se extraen los formularios de respuesta en vivo.'
+                : 'Google Sheet workbook ID used for pulling live form submissions directly.'}
+            </span>
+          </div>
+
+          <div>
+            <label htmlFor="config-sheet-url" className={`block font-semibold mb-1.5 flex items-center justify-between ${
+              isLight ? 'text-slate-700' : 'text-slate-400'
+            }`}>
+              <span className="flex items-center gap-1.5">
+                <Database className="w-3.5 h-3.5 text-emerald-500" />
+                {isEs ? 'URL del Libro Google Sheets' : 'Google Sheets Shared Workbook URL'}
+              </span>
+              {sheetUrl && (
+                <a
+                  href={sheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-emerald-500 hover:text-emerald-400 underline font-mono flex items-center gap-1"
+                >
+                  {isEs ? '🔗 Abrir Hoja' : '🔗 Open Sheet'}
+                </a>
+              )}
+            </label>
+            <input
+              id="config-sheet-url"
+              name="sheetUrl"
+              type="text"
+              value={sheetUrl}
+              onChange={e => setSheetUrl(e.target.value)}
+              className={`w-full border rounded-lg p-2.5 font-mono text-xs focus:outline-none focus:border-emerald-500 ${
+                isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-slate-200'
+              }`}
+              placeholder="https://docs.google.com/spreadsheets/d/19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk/edit?usp=sharing"
+            />
+            <span className={`text-[11px] mt-1 block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+              {isEs 
+                ? 'URL pública compartida de Google Sheets vinculada a la empresa.'
+                : 'Direct public sharing URL for the Tradición Dance Co live Google Sheet.'}
             </span>
           </div>
         </div>
