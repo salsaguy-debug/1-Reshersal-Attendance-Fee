@@ -591,8 +591,8 @@ export default function App() {
     setIsSyncing(true);
 
     try {
-      // 0. Fetch Google Calendar events to populate missing practice dates & RSVP statuses
-      const { events, source } = await fetchGoogleCalendarEvents(DEFAULT_CALENDAR_ID);
+      // 0. Fetch Google Calendar events directly from calendar ID l46591dbdq7t070djs0ta7cbac@group.calendar.google.com
+      const { events, source } = await fetchGoogleCalendarEvents(config.calendarId || DEFAULT_CALENDAR_ID);
       const baseline = config.baselineDate || '2026-04-01';
       const { updatedRecords: baseRecords } = populateMissingRehearsalDates(
         records,
@@ -602,6 +602,22 @@ export default function App() {
         baseline
       );
 
+      // 0.5 Direct Live Fetch from Google Sheet ID 19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk (No Apps Script needed!)
+      let activeFormResponses = formResponses;
+      try {
+        const sheetTargetId = config.googleSheetId || '19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk';
+        const sheetRes = await fetch(`/api/sheet/live-sync?sheetId=${sheetTargetId}`);
+        if (sheetRes.ok) {
+          const sheetData = await sheetRes.json();
+          if (sheetData.success && Array.isArray(sheetData.formResponses) && sheetData.formResponses.length > 0) {
+            activeFormResponses = sheetData.formResponses;
+            setFormResponses(sheetData.formResponses);
+          }
+        }
+      } catch (err) {
+        console.warn('Direct Google Sheet fetch fallback to active state:', err);
+      }
+
       // 1. Load Exclusions and Purge
       const excludedEmails = new Set(exclusions.map(e => e.email.toLowerCase().trim()));
 
@@ -610,7 +626,7 @@ export default function App() {
         baseRecords.map(r => [`${r.date}_${r.performerEmail.toLowerCase().trim()}`, r])
       );
 
-      formResponses.forEach(fr => {
+      activeFormResponses.forEach(fr => {
         const email = fr.performerEmail.toLowerCase().trim();
         if (!email || excludedEmails.has(email)) return;
 

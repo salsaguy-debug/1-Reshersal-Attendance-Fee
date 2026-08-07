@@ -62,6 +62,8 @@ export interface PracticeEvent {
 
 export interface SystemConfig {
   calendarId: string;
+  googleSheetId?: string;
+  googleSheetUrl?: string;
   adminEmails: string[];
   fallbackExclusions: string[];
   baselineDate: string;

@@ -12,6 +12,8 @@ export const INITIAL_CONFIG: SystemConfig = {
   companyName: 'Tradición Dance Co.',
   systemVersion: 'BTG REV 7.4',
   calendarId: 'l46591dbdq7t070djs0ta7cbac@group.calendar.google.com',
+  googleSheetId: '19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk',
+  googleSheetUrl: 'https://docs.google.com/spreadsheets/d/19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk/edit?usp=sharing',
   adminEmails: ['rodriguez2113@gmail.com', 'admin@tradiciondance.org', 'director@tradiciondance.org'],
   fallbackExclusions: ['former.dancer@tradiciondance.com', 'archived.member@gmail.com'],
   baselineDate: '2026-04-01',

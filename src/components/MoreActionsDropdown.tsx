@@ -288,6 +288,32 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
               </button>
             )}
 
+            {/* Pop-up Fee & Attendance Calculator */}
+            {onOpenCalculator && (
+              <button
+                onClick={() => {
+                  onOpenCalculator();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-indigo-50 text-slate-800' : 'hover:bg-indigo-950/40 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 mt-0.5 shrink-0">
+                  <Calculator className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-indigo-500 flex items-center justify-between">
+                    <span>{lang === 'es' ? 'Calculadora de Cuotas SOP' : 'Fee & Balance Calculator'}</span>
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono font-bold">Pop-up Widget</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {lang === 'es' ? 'Calculadora interactiva de cuotas, recargos y saldos' : 'Interactive dues preset math, late fee calculator & tape history'}
+                  </p>
+                </div>
+              </button>
+            )}
+
             {/* 1. Import Live Data */}
             <button
               onClick={handleTriggerLiveImport}
@@ -635,25 +661,6 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
                 )}
               </div>
             </button>
-
-            {/* 8. Popup Fee Calculator Widget */}
-            {onOpenCalculator && (
-              <button
-                onClick={() => {
-                  onOpenCalculator();
-                  setIsOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
-                  isLight ? 'hover:bg-indigo-50 text-slate-800' : 'hover:bg-indigo-950/40 text-slate-100'
-                }`}
-              >
-                <Calculator className="w-4 h-4 text-emerald-400 shrink-0" />
-                <div className="flex-1 flex items-center justify-between text-xs">
-                  <span>{lang === 'es' ? 'Calculadora de Cuotas SOP' : 'Fee & Balance Calculator'}</span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">Pop-up</span>
-                </div>
-              </button>
-            )}
 
             {/* Section 3: Data Management & Reset */}
             {(onDeleteAllTestData || onResetData) && (

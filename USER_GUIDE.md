@@ -173,13 +173,19 @@ To allow 3 or more administrators to edit records simultaneously without losing 
 
 ---
 
-## 11. Popup Fee & Attendance Calculator Widget
-
-Access via the bottom-right floating calculator button (`🧮`) or **`More Actions v` > `Fee & Balance Calculator`**.
-
-* **Interactive Keypad & LED Display**: Full support for basic math operations (`+`, `-`, `×`, `÷`, `%`, `±`, `.`, `AC`, `⌫`).
-* **SOP Fast Preset Buttons**:
-  * **`+$5 (Penalización)`**: Instantly adds the standard $5 SOP unconfirmed / no-show penalty.
-  * **`+$10 (Doble)`**: Instantly adds double penalties ($10) for two unexcused absences.
-* **`📋 Copy Result` Button**: Copies the calculated total directly to your clipboard for quick pasting into attendance notes or payment transaction forms.
 * **Keyboard Shortcuts**: Keyboard support enabled (numbers 0-9, operators, `Enter` / `=`, `Backspace`, `Escape` to close).
+
+---
+
+## 12. Direct Google Sheets & Calendar Integration (No Apps Script Required)
+
+The application now supports **Direct Live Google Sheet Access**, eliminating the need for Google Apps Script installation:
+
+* **Direct Shared Google Sheet URL**:
+  `https://docs.google.com/spreadsheets/d/19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk/edit?usp=sharing` (Sheet ID: `19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk`).
+* **Direct Google Calendar ID**:
+  `l46591dbdq7t070djs0ta7cbac@group.calendar.google.com`.
+* **Automatic Penalty Calculation Engine**:
+  * Clicking **`🔄 Sync (Rev 7.4)`** automatically fetches live form submissions directly from Google Sheet ID `19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk` over HTTP/GViz CSV feed.
+  * Rehearsal events are queried directly from Google Calendar ID `l46591dbdq7t070djs0ta7cbac@group.calendar.google.com`.
+  * The system cross-references form submissions against scheduled practice dates and automatically computes SOP BTG REV 7.4 fee penalties ($5 for unconfirmed, $5 for no-shows, $0 for verified, $0 for excused).
