@@ -1,37 +1,123 @@
-import express from "express";
+import fs from "fs";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+
+// Shared Server Persistence Layer for Multi-User Real-Time Sync
+const DATA_DIR = path.join(process.cwd(), "data");
+const DB_FILE = path.join(DATA_DIR, "shared-database.json");
+
+interface SharedDatabase {
+  config: any;
+  performers: any[];
+  records: any[];
+  formResponses: any[];
+  exclusions: any[];
+  reportLogs: any[];
+  payments: any[];
+  revision: number;
+  lastUpdated: string;
+}
+
+let sharedDbState: SharedDatabase = {
+  config: null,
+  performers: [],
+  records: [],
+  formResponses: [],
+  exclusions: [],
+  reportLogs: [],
+  payments: [],
+  revision: 1,
+  lastUpdated: new Date().toISOString()
+};
+
+// Ensure data folder and shared DB file exist
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (fs.existsSync(DB_FILE)) {
+    const fileData = fs.readFileSync(DB_FILE, "utf-8");
+    if (fileData.trim()) {
+      sharedDbState = JSON.parse(fileData);
+    }
+  }
+} catch (err) {
+  console.error("[Shared DB] Error initializing file storage:", err);
+}
+
+const saveDbToDisk = () => {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(sharedDbState, null, 2), "utf-8");
+  } catch (err) {
+    console.error("[Shared DB] Error writing database to disk:", err);
+  }
+};
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
-
-  // Initialize Gemini AI Client lazily or safely
-  const getAiClient = () => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY environment variable is missing.");
-    }
-    return new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
-      },
-    });
-  };
+  app.use(express.json({ limit: '10mb' }));
 
   // API Route: Health check
   app.get("/api/health", (req, res) => {
     res.json({
       status: "ok",
       system: "Tradición Dance Co. Attendance & Fee Automation (BTG REV 7.4)",
+      sharedDbRevision: sharedDbState.revision,
+      lastUpdated: sharedDbState.lastUpdated,
       timestamp: new Date().toISOString(),
     });
+  });
+
+  // API Routes: Shared Real-Time Multi-User Database
+  app.get("/api/shared-data", (req, res) => {
+    res.json({
+      success: true,
+      data: sharedDbState,
+      revision: sharedDbState.revision,
+      lastUpdated: sharedDbState.lastUpdated
+    });
+  });
+
+  app.get("/api/shared-data/status", (req, res) => {
+    res.json({
+      success: true,
+      revision: sharedDbState.revision,
+      lastUpdated: sharedDbState.lastUpdated
+    });
+  });
+
+  app.post("/api/shared-data", (req, res) => {
+    try {
+      const { config, performers, records, formResponses, exclusions, reportLogs, payments, clientRevision } = req.body;
+
+      if (config) sharedDbState.config = config;
+      if (Array.isArray(performers)) sharedDbState.performers = performers;
+      if (Array.isArray(records)) sharedDbState.records = records;
+      if (Array.isArray(formResponses)) sharedDbState.formResponses = formResponses;
+      if (Array.isArray(exclusions)) sharedDbState.exclusions = exclusions;
+      if (Array.isArray(reportLogs)) sharedDbState.reportLogs = reportLogs;
+      if (Array.isArray(payments)) sharedDbState.payments = payments;
+
+      sharedDbState.revision = (sharedDbState.revision || 1) + 1;
+      sharedDbState.lastUpdated = new Date().toISOString();
+
+      saveDbToDisk();
+
+      console.log(`[Shared DB] Updated to revision ${sharedDbState.revision} at ${sharedDbState.lastUpdated}`);
+
+      res.json({
+        success: true,
+        revision: sharedDbState.revision,
+        lastUpdated: sharedDbState.lastUpdated,
+        data: sharedDbState
+      });
+    } catch (err: any) {
+      console.error("[Shared DB Error]", err);
+      res.status(500).json({ error: "SHARED_DB_UPDATE_FAILED", message: err.message });
+    }
   });
 
   // API Route: Google Calendar API Event Fetcher
@@ -115,6 +201,22 @@ async function startServer() {
       res.status(500).json({ error: "CALENDAR_FETCH_FAILED", message: err.message });
     }
   });
+
+  // Initialize Gemini AI Client lazily or safely
+  const getAiClient = () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is missing.");
+    }
+    return new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+  };
 
   // API Route: AI Executive Digest & Attendance Summary Generator
   app.post("/api/reports/ai-summary", async (req, res) => {

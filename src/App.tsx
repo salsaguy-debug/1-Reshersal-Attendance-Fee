@@ -16,7 +16,8 @@ import {
   Sun,
   Moon,
   Globe,
-  FileUp
+  FileUp,
+  Calculator
 } from 'lucide-react';
 
 import logoImg from './assets/logo.jpg';
@@ -62,6 +63,7 @@ import { ConfigPanel } from './components/ConfigPanel';
 import { LiveImportModal } from './components/LiveImportModal';
 import { MoreActionsDropdown } from './components/MoreActionsDropdown';
 import { SyncSummaryModal, SyncStats } from './components/SyncSummaryModal';
+import { CalculatorWidget } from './components/CalculatorWidget';
 
 export default function App() {
   const [config, setConfig] = useState<SystemConfig>(() => {
@@ -146,13 +148,48 @@ export default function App() {
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [showSopModal, setShowSopModal] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
+  const [showCalculator, setShowCalculator] = useState<boolean>(false);
   const [syncStats, setSyncStats] = useState<SyncStats | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Debounced Auto-Save Status Indicator State
+  // Debounced Auto-Save Status & Multi-User Real-Time Sync State
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [sharedSyncStatus, setSharedSyncStatus] = useState<'connected' | 'syncing' | 'offline'>('connected');
+  const [sharedRevision, setSharedRevision] = useState<number>(1);
   const isFirstRender = useRef(true);
+  const isRemoteUpdating = useRef(false);
+
+  // Initial Fetch from Shared Server Database for Multi-User Real-Time Sync
+  useEffect(() => {
+    const fetchSharedData = async () => {
+      try {
+        const res = await fetch('/api/shared-data');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            const sData = json.data;
+            isRemoteUpdating.current = true;
+            if (sData.config) setConfig(sData.config);
+            if (Array.isArray(sData.records) && sData.records.length > 0) setRecords(sData.records);
+            if (Array.isArray(sData.formResponses) && sData.formResponses.length > 0) setFormResponses(sData.formResponses);
+            if (Array.isArray(sData.exclusions) && sData.exclusions.length > 0) setExclusions(sData.exclusions);
+            if (Array.isArray(sData.reportLogs) && sData.reportLogs.length > 0) setReportLogs(sData.reportLogs);
+            if (Array.isArray(sData.performers) && sData.performers.length > 0) setPerformers(sData.performers);
+            if (Array.isArray(sData.payments) && sData.payments.length > 0) setPayments(sData.payments);
+            if (json.revision) setSharedRevision(json.revision);
+            setSharedSyncStatus('connected');
+            setTimeout(() => { isRemoteUpdating.current = false; }, 350);
+          }
+        }
+      } catch (err) {
+        console.warn('Shared DB endpoint offline, defaulting to local storage:', err);
+        setSharedSyncStatus('offline');
+      }
+    };
+
+    fetchSharedData();
+  }, []);
 
   // Helper to extract & sync unique performers list from attendance records and form responses
   const derivePerformersList = (
@@ -195,16 +232,19 @@ export default function App() {
     return Array.from(map.values());
   };
 
-  // Debounced auto-save to localStorage on state changes
+  // Debounced Auto-Save to LocalStorage & Centralized Server Database (3-User Shared Real-Time Storage)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
 
-    setAutoSaveStatus('saving');
+    if (isRemoteUpdating.current) return;
 
-    const saveTimer = setTimeout(() => {
+    setAutoSaveStatus('saving');
+    setSharedSyncStatus('syncing');
+
+    const saveTimer = setTimeout(async () => {
       try {
         localStorage.setItem('tradicion_config', JSON.stringify(config));
         localStorage.setItem('tradicion_records', JSON.stringify(records));
@@ -215,14 +255,82 @@ export default function App() {
         localStorage.setItem('tradicion_theme', theme);
         localStorage.setItem('tradicion_lang', lang);
         setAutoSaveStatus('saved');
+
+        // Broadcast changes to shared real-time server database for all 3 users
+        const res = await fetch('/api/shared-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            config,
+            records,
+            formResponses,
+            exclusions,
+            reportLogs,
+            performers,
+            payments,
+            clientRevision: sharedRevision
+          })
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.revision) setSharedRevision(json.revision);
+          setSharedSyncStatus('connected');
+        }
       } catch (e) {
-        console.error('Failed to save state to local storage:', e);
+        console.error('Failed to sync state to shared server database:', e);
         setAutoSaveStatus('idle');
+        setSharedSyncStatus('offline');
       }
-    }, 500); // 500ms debounce delay
+    }, 500);
 
     return () => clearTimeout(saveTimer);
-  }, [config, records, formResponses, exclusions, reportLogs, performers, theme, lang]);
+  }, [config, records, formResponses, exclusions, reportLogs, performers, payments, theme, lang]);
+
+  // Real-Time 3-User Polling & Sync Listener (Polls shared database every 3 seconds & on tab focus)
+  useEffect(() => {
+    const pollSharedDatabase = async () => {
+      if (isRemoteUpdating.current) return;
+      try {
+        const res = await fetch('/api/shared-data/status');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.revision && json.revision > sharedRevision) {
+            console.log(`[Real-Time Sync] Detected remote update (Rev ${json.revision} > local Rev ${sharedRevision}). Pulling shared state...`);
+            const dataRes = await fetch('/api/shared-data');
+            if (dataRes.ok) {
+              const dataJson = await dataRes.json();
+              if (dataJson.success && dataJson.data) {
+                const sData = dataJson.data;
+                isRemoteUpdating.current = true;
+                if (sData.config) setConfig(sData.config);
+                if (Array.isArray(sData.records)) setRecords(sData.records);
+                if (Array.isArray(sData.formResponses)) setFormResponses(sData.formResponses);
+                if (Array.isArray(sData.exclusions)) setExclusions(sData.exclusions);
+                if (Array.isArray(sData.reportLogs)) setReportLogs(sData.reportLogs);
+                if (Array.isArray(sData.performers)) setPerformers(sData.performers);
+                if (Array.isArray(sData.payments)) setPayments(sData.payments);
+                setSharedRevision(dataJson.revision);
+                setSharedSyncStatus('connected');
+                setTimeout(() => { isRemoteUpdating.current = false; }, 350);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        // Silently handle polling disconnects
+      }
+    };
+
+    const intervalId = setInterval(pollSharedDatabase, 3000);
+    const handleFocus = () => pollSharedDatabase();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [sharedRevision]);
 
   // Keep 'saved' status visible for 3 seconds before resetting to idle
   useEffect(() => {
@@ -719,12 +827,30 @@ export default function App() {
   };
 
   const handleDeleteRecord = (id: string) => {
-    setRecords(prev => prev.filter(r => r.id !== id));
-    showToast('Record deleted.');
+    const targetRecord = records.find(r => r.id === id);
+    const performerName = targetRecord?.performerName || (lang === 'es' ? 'este registro' : 'this record');
+    const dateStr = targetRecord?.date ? ` (${targetRecord.date})` : '';
+    const nameWithDate = `${performerName}${dateStr}`;
+
+    setConfirmModal({
+      isOpen: true,
+      title: t.confirmTitleDeleteRecord || (lang === 'es' ? 'Eliminar Registro de Asistencia' : 'Delete Attendance Record'),
+      message: (t.confirmMessageDeleteRecord || (lang === 'es'
+        ? '¿Estás seguro de que deseas eliminar el registro de asistencia de "{name}"? Esta acción no se puede deshacer.'
+        : 'Are you sure you want to delete the attendance record for "{name}"? This action cannot be undone.'
+      )).replace('{name}', nameWithDate),
+      confirmText: t.confirmBtnDeleteRecord || (lang === 'es' ? 'Sí, Eliminar Registro' : 'Yes, Delete Record'),
+      isDanger: true,
+      onConfirm: () => {
+        setRecords(prev => prev.filter(r => r.id !== id));
+        showToast(lang === 'es' ? `Se eliminó el registro de ${performerName}.` : `Record for ${performerName} deleted.`);
+        setConfirmModal(null);
+      }
+    });
   };
 
   // Exclusion Handlers
-  const handleAddExclusion = (email: string, name: string, reason: string) => {
+  const executeAddExclusion = (email: string, name: string, reason: string) => {
     const newEx: ExcludedPerformer = {
       email,
       name,
@@ -735,7 +861,31 @@ export default function App() {
 
     // Immediately scrub matching rows
     setRecords(prev => prev.filter(r => r.performerEmail.toLowerCase() !== email.toLowerCase()));
-    showToast(`Excluded ${email} and purged matching rows across all sheets.`);
+    showToast(lang === 'es'
+      ? `Se excluyó a ${email} y se depuraron los registros coincidentes.`
+      : `Excluded ${email} and purged matching rows across all sheets.`);
+  };
+
+  const handleAddExclusion = (email: string, name: string, reason: string) => {
+    const matchingCount = records.filter(r => r.performerEmail.toLowerCase() === email.toLowerCase()).length;
+
+    if (matchingCount > 0) {
+      setConfirmModal({
+        isOpen: true,
+        title: lang === 'es' ? 'Excluir Integrante y Depurar Registros' : 'Exclude Performer & Scrub Records',
+        message: lang === 'es'
+          ? `Excluir a "${name || email}" también eliminará automáticamente ${matchingCount} registro(s) de asistencia coincidentes. ¿Deseas continuar?`
+          : `Excluding "${name || email}" will also automatically purge and delete ${matchingCount} matching attendance record(s). Do you want to proceed?`,
+        confirmText: lang === 'es' ? 'Sí, Excluir y Depurar' : 'Yes, Exclude & Scrub',
+        isDanger: true,
+        onConfirm: () => {
+          executeAddExclusion(email, name, reason);
+          setConfirmModal(null);
+        }
+      });
+    } else {
+      executeAddExclusion(email, name, reason);
+    }
   };
 
   const handleBulkAddExclusions = (items: Array<{ email: string; name?: string; reason?: string }>) => {
@@ -768,21 +918,76 @@ export default function App() {
       // Scrub matching rows across all attendance records
       const allNewEmails = new Set(newExclusions.map(e => e.email.toLowerCase()));
       setRecords(prev => prev.filter(r => !allNewEmails.has(r.performerEmail.toLowerCase())));
-      showToast(`Bulk imported ${newExclusions.length} excluded performer(s) & purged matching rehearsal records.`);
+      showToast(lang === 'es'
+        ? `Se importaron ${newExclusions.length} integrante(s) excluidos y se depuraron sus registros.`
+        : `Bulk imported ${newExclusions.length} excluded performer(s) & purged matching rehearsal records.`);
     } else {
-      showToast('No new valid email addresses to import (all addresses were already excluded or invalid).');
+      showToast(lang === 'es'
+        ? 'No hay nuevas direcciones de correo válidas para importar.'
+        : 'No new valid email addresses to import (all addresses were already excluded or invalid).');
     }
   };
 
   const handleDeleteExclusion = (email: string) => {
-    setExclusions(prev => prev.filter(e => e.email.toLowerCase() !== email.toLowerCase()));
-    showToast(`Removed ${email} from exclusions.`);
+    const ex = exclusions.find(e => e.email.toLowerCase() === email.toLowerCase());
+    const displayName = ex?.name ? `${ex.name} (${email})` : email;
+
+    setConfirmModal({
+      isOpen: true,
+      title: t.confirmTitleDeleteExclusion || (lang === 'es' ? 'Remover Integrante Excluido' : 'Remove Excluded Performer'),
+      message: (t.confirmMessageDeleteExclusion || (lang === 'es'
+        ? '¿Estás seguro de que deseas remover a "{name}" de la lista de exclusión?'
+        : 'Are you sure you want to remove "{name}" from the exclusion list?'
+      )).replace('{name}', displayName),
+      confirmText: t.confirmBtnDeleteExclusion || (lang === 'es' ? 'Sí, Remover' : 'Yes, Remove'),
+      isDanger: true,
+      onConfirm: () => {
+        setExclusions(prev => prev.filter(e => e.email.toLowerCase() !== email.toLowerCase()));
+        showToast(lang === 'es' ? `Se removió a ${email} de las exclusiones.` : `Removed ${email} from exclusions.`);
+        setConfirmModal(null);
+      }
+    });
   };
 
   const handlePurgeExclusions = () => {
+    const count = exclusions.length;
     const excludedEmails = new Set(exclusions.map(e => e.email.toLowerCase().trim()));
-    setRecords(prev => prev.filter(r => !excludedEmails.has(r.performerEmail.toLowerCase())));
-    showToast('Dynamic Scrub: All blacklisted email addresses purged!');
+    const matchingRecordsCount = records.filter(r => excludedEmails.has(r.performerEmail.toLowerCase())).length;
+
+    setConfirmModal({
+      isOpen: true,
+      title: t.confirmTitlePurgeExclusions || (lang === 'es' ? 'Depurar Exclusiones' : 'Scrub & Purge Exclusions'),
+      message: lang === 'es'
+        ? `¿Estás seguro de que deseas eliminar todas las filas de asistencia (${matchingRecordsCount} registro(s)) que coinciden con los correos excluidos (${count} integrante(s))?`
+        : `Are you sure you want to purge all rehearsal attendance records (${matchingRecordsCount} record(s)) matching the blacklisted exclusion emails (${count} performer(s))?`,
+      confirmText: t.confirmBtnPurgeExclusions || (lang === 'es' ? 'Sí, Depurar Ahora' : 'Yes, Purge Now'),
+      isDanger: true,
+      onConfirm: () => {
+        setRecords(prev => prev.filter(r => !excludedEmails.has(r.performerEmail.toLowerCase())));
+        showToast(lang === 'es' ? `Depuración Dinámica: ¡Se eliminaron ${matchingRecordsCount} registro(s)!` : `Dynamic Scrub: ${matchingRecordsCount} blacklisted record(s) purged!`);
+        setConfirmModal(null);
+      }
+    });
+  };
+
+  const handleDeletePayment = (id: string) => {
+    const pay = payments.find(p => p.id === id);
+    const amountStr = pay ? `$${pay.amount.toFixed(2)} (${pay.method})` : '';
+
+    setConfirmModal({
+      isOpen: true,
+      title: lang === 'es' ? 'Eliminar Registro de Pago' : 'Delete Payment Transaction',
+      message: lang === 'es'
+        ? `¿Estás seguro de que deseas eliminar el registro de pago de ${amountStr}? Esta acción no se puede deshacer.`
+        : `Are you sure you want to delete the payment transaction of ${amountStr}? This action cannot be undone.`,
+      confirmText: lang === 'es' ? 'Sí, Eliminar Pago' : 'Yes, Delete Payment',
+      isDanger: true,
+      onConfirm: () => {
+        setPayments(prev => prev.filter(p => p.id !== id));
+        showToast(lang === 'es' ? 'Registro de pago eliminado.' : 'Payment transaction deleted.');
+        setConfirmModal(null);
+      }
+    });
   };
 
   const handleAddCheckIn = (email: string, name: string, practiceDate: string, status: 'Yes' | 'No', rsvpStatus?: RsvpStatus) => {
@@ -1050,6 +1255,32 @@ export default function App() {
                     </>
                   ) : null}
                 </div>
+
+                {/* Real-Time Multi-User Shared Sync Badge */}
+                <div
+                  title={lang === 'es'
+                    ? 'Base de datos compartida en tiempo real activa. Hasta 3 usuarios pueden actualizar simultáneamente sin perder información.'
+                    : 'Live multi-user shared server database active. Up to 3 users can edit simultaneously in real time without losing data.'
+                  }
+                  className={`hidden md:flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shadow-sm transition-all ${
+                    sharedSyncStatus === 'syncing'
+                      ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                      : sharedSyncStatus === 'connected'
+                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                      : 'bg-rose-500/10 text-rose-500 border-rose-500/30'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${
+                    sharedSyncStatus === 'syncing' ? 'bg-amber-500 animate-ping' : sharedSyncStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+                  }`} />
+                  <span>
+                    {sharedSyncStatus === 'syncing'
+                      ? (lang === 'es' ? 'Sincronizando...' : 'Syncing Shared DB...')
+                      : sharedSyncStatus === 'connected'
+                      ? (lang === 'es' ? '🟢 Servidor Compartido en Vivo (3 Usuarios)' : '🟢 Shared DB Live (3 Users Sync)')
+                      : (lang === 'es' ? '🔴 Guardado Local' : '🔴 Local Storage Mode')}
+                  </span>
+                </div>
               </div>
               <p className={`text-xs font-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {t.systemSubtitle}
@@ -1094,12 +1325,41 @@ export default function App() {
               onSyncCalendarEvents={handleSyncCalendarEvents}
               onForceUpdateMonths={handleForceUpdateMonths}
               onExportToDrive={handleExportToDrive}
+              onExportCsv={() => {
+                let csvRows: string[] = [];
+                csvRows.push(['Performer Name', 'Email', ...availableMonths, 'Total Fees', 'Status'].join(','));
+                masterSummary.forEach(m => {
+                  const row = [
+                    `"${m.performerName}"`,
+                    `"${m.performerEmail}"`,
+                    ...availableMonths.map(mn => m.monthlyFees[mn] || 0),
+                    m.totalFees,
+                    m.totalFees > 0 ? 'Outstanding' : 'Paid in Full'
+                  ];
+                  csvRows.push(row.join(','));
+                });
+                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `Tradicion_MasterSummary_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+              onAddExclusion={() => {
+                setActiveTab('Excluded these Performers');
+                setActiveView('sheet');
+              }}
+              onBulkImportCsv={() => setShowLiveImportModal(true)}
+              onPurgeExclusions={handlePurgeExclusions}
               isSyncing={isSyncing}
               activeView={activeView}
               setActiveView={setActiveView}
               onResetData={resetAllDataToDefault}
               onDeleteAllTestData={deleteAllTestData}
               onOpenSopRules={() => setShowSopModal(true)}
+              onOpenCalculator={() => setShowCalculator(true)}
               stats={kpiStats}
               theme={theme}
               lang={lang}
@@ -1219,6 +1479,7 @@ export default function App() {
             }}
             payments={payments}
             onAddPayment={pay => setPayments(prev => [pay, ...prev])}
+            onDeletePayment={handleDeletePayment}
           />
         )}
 
@@ -1357,6 +1618,26 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Floating Action Button (FAB): Pop-up Calculator Widget */}
+      <button
+        onClick={() => setShowCalculator(true)}
+        className="fixed bottom-6 right-6 z-40 p-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-2xl hover:scale-105 transition-all ring-4 ring-indigo-500/20 flex items-center gap-2 font-bold text-xs group"
+        title={lang === 'es' ? 'Abrir Calculadora de Cuotas SOP' : 'Open Fee & Attendance Calculator'}
+      >
+        <Calculator className="w-5 h-5" />
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap">
+          {lang === 'es' ? 'Calculadora' : 'Calculator'}
+        </span>
+      </button>
+
+      {/* Popup Fee & Attendance Calculator Widget */}
+      <CalculatorWidget
+        isOpen={showCalculator}
+        onClose={() => setShowCalculator(false)}
+        theme={theme}
+        lang={lang}
+      />
     </div>
   );
 }

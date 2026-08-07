@@ -154,10 +154,32 @@ Access via the **`⚙️` Settings** button in the top bar.
 
 ---
 
-## 9. Live Data Import Modal
-
-Access via **`More Actions v` > `Import Live`**.
-
-* **Data Types Supported**: Attendance Records, Form Responses 1, or Exclusions.
-* **Import Methods**: Copy-paste raw CSV data, paste a Google Sheets URL, or drag-and-drop CSV files.
 * **Import Options**: `Merge with existing data` or `Replace current dataset`.
+
+---
+
+## 10. Multi-User Real-Time Collaboration & Shared Storage Architecture (3-User Setup)
+
+To allow 3 or more administrators to edit records simultaneously without losing data:
+
+1. **Centralized Shared Database (`/api/shared-data`)**:
+   - The application automatically synchronizes all attendance records, form responses, exclusions, and payment ledgers to a shared server-backed JSON store (`data/shared-database.json`).
+   - Any modification made by User 1, User 2, or User 3 is saved instantly to the server database and broadcast to all connected web app clients via 3-second live background polling and window focus listeners.
+   - Look for the **`🟢 Shared DB Live (3 Users Sync)`** indicator badge in the top navigation bar to confirm active real-time connection.
+
+2. **Google Sheets Concurrent Multi-User Editing**:
+   - For collaborative cloud editing, deploy the Google Apps Script (`Code.gs`) to your shared Google Sheet URL (`Google Workspace > Extensions > Apps Script`).
+   - Multiple users can open and edit the same Google Sheet simultaneously in real time. The app's `Sync (Rev 7.4)` tool seamlessly pulls and merges live changes from all users.
+
+---
+
+## 11. Popup Fee & Attendance Calculator Widget
+
+Access via the bottom-right floating calculator button (`🧮`) or **`More Actions v` > `Fee & Balance Calculator`**.
+
+* **Interactive Keypad & LED Display**: Full support for basic math operations (`+`, `-`, `×`, `÷`, `%`, `±`, `.`, `AC`, `⌫`).
+* **SOP Fast Preset Buttons**:
+  * **`+$5 (Penalización)`**: Instantly adds the standard $5 SOP unconfirmed / no-show penalty.
+  * **`+$10 (Doble)`**: Instantly adds double penalties ($10) for two unexcused absences.
+* **`📋 Copy Result` Button**: Copies the calculated total directly to your clipboard for quick pasting into attendance notes or payment transaction forms.
+* **Keyboard Shortcuts**: Keyboard support enabled (numbers 0-9, operators, `Enter` / `=`, `Backspace`, `Escape` to close).

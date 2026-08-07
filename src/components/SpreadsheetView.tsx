@@ -631,35 +631,6 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
 
         {/* Sync & Action Tools */}
         <div className="flex items-center flex-wrap gap-2">
-          {onForceUpdateMonths && (
-            <button
-              onClick={onForceUpdateMonths}
-              disabled={isSyncing}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm border ${
-                isLight
-                  ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
-                  : 'bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 border-indigo-800'
-              }`}
-              title={isEs ? 'Forzar actualización y recálculo de meses' : 'Force refresh and update all month sheets'}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-indigo-500 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isEs ? 'Forzar Actualizar Meses' : 'Force Update Months'}</span>
-            </button>
-          )}
-
-          <button
-            onClick={exportTabToCsv}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm border ${
-              isLight
-                ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-slate-200/50'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
-            }`}
-            title="Export active tab data as CSV file"
-          >
-            <Download className="w-3.5 h-3.5 text-indigo-500" />
-            {isEs ? 'Exportar CSV' : 'Export CSV'}
-          </button>
-
           {availableMonths.includes(activeTab) && (
             <button
               onClick={() => setShowAddModal(true)}
@@ -668,34 +639,6 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               <Plus className="w-3.5 h-3.5" />
               {isEs ? 'Agregar Registro' : 'Add Performer Record'}
             </button>
-          )}
-
-          {activeTab === 'Excluded these Performers' && (
-            <>
-              <button
-                onClick={() => setShowAddExclusionModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium transition-colors shadow"
-              >
-                <UserX className="w-3.5 h-3.5" />
-                {isEs ? 'Excluir Integrante' : 'Exclude Performer'}
-              </button>
-
-              <button
-                onClick={() => setShowBulkImportModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-medium transition-colors shadow"
-              >
-                <FileUp className="w-3.5 h-3.5" />
-                {isEs ? 'Importación Masiva CSV' : 'Bulk CSV Import'}
-              </button>
-
-              <button
-                onClick={onPurgeExclusions}
-                className="flex items-center gap-1.5 px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors shadow"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                {isEs ? 'Depurar Exclusiones Ahora' : 'Scrub & Purge Exclusions Now'}
-              </button>
-            </>
           )}
         </div>
       </div>
@@ -1208,14 +1151,6 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                   : 'Any email listed in Column A will be automatically scrubbed and deleted from all monthly rehearsal sheets and the Master Summary during sync.'}
               </span>
             </div>
-
-            <button
-              onClick={() => setShowBulkImportModal(true)}
-              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium text-xs flex items-center gap-1.5 transition-colors shadow shrink-0"
-            >
-              <FileUp className="w-3.5 h-3.5" />
-              {isEs ? 'Importación Masiva CSV' : 'Bulk CSV Import'}
-            </button>
           </div>
 
           <table className={`w-full text-left text-xs border-collapse ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>

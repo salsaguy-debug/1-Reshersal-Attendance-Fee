@@ -149,7 +149,16 @@ export const translations = {
     confirmBtnReset: 'Yes, Reset Baseline Data',
     confirmTitleDelete: 'Delete All Test Data',
     confirmMessageDelete: 'Are you sure you want to delete ALL test data? This will completely clear all attendance records, form responses, exclusions, and email report logs.',
-    confirmBtnDelete: 'Yes, Delete All Test Data'
+    confirmBtnDelete: 'Yes, Delete All Test Data',
+    confirmTitleDeleteRecord: 'Delete Attendance Record',
+    confirmMessageDeleteRecord: 'Are you sure you want to delete the attendance record for "{name}"? This action cannot be undone.',
+    confirmBtnDeleteRecord: 'Yes, Delete Record',
+    confirmTitleDeleteExclusion: 'Remove Excluded Performer',
+    confirmMessageDeleteExclusion: 'Are you sure you want to remove "{name}" from the exclusion list?',
+    confirmBtnDeleteExclusion: 'Yes, Remove',
+    confirmTitlePurgeExclusions: 'Scrub & Purge Exclusions',
+    confirmMessagePurgeExclusions: 'Are you sure you want to purge all rehearsal attendance records matching the blacklisted exclusion emails ({count} performer(s))?',
+    confirmBtnPurgeExclusions: 'Yes, Purge Now'
   },
   es: {
     // Top Bar & App Titles
@@ -275,6 +284,15 @@ export const translations = {
     confirmBtnReset: 'Sí, Restablecer Datos',
     confirmTitleDelete: 'Eliminar Todos los Datos de Prueba',
     confirmMessageDelete: '¿Estás seguro de que deseas eliminar TODOS los datos de prueba? Esto vaciará completamente todos los registros de asistencia, respuestas de formulario, exclusiones y reportes.',
-    confirmBtnDelete: 'Sí, Eliminar Todo'
+    confirmBtnDelete: 'Sí, Eliminar Todo',
+    confirmTitleDeleteRecord: 'Eliminar Registro de Asistencia',
+    confirmMessageDeleteRecord: '¿Estás seguro de que deseas eliminar el registro de asistencia de "{name}"? Esta acción no se puede deshacer.',
+    confirmBtnDeleteRecord: 'Sí, Eliminar Registro',
+    confirmTitleDeleteExclusion: 'Remover Integrante Excluido',
+    confirmMessageDeleteExclusion: '¿Estás seguro de que deseas remover a "{name}" de la lista de exclusión?',
+    confirmBtnDeleteExclusion: 'Sí, Remover',
+    confirmTitlePurgeExclusions: 'Depurar Exclusiones',
+    confirmMessagePurgeExclusions: '¿Estás seguro de que deseas eliminar todos los registros de asistencia que coincidan con los correos excluidos ({count} integrante(s))?',
+    confirmBtnPurgeExclusions: 'Sí, Depurar Ahora'
   }
 };

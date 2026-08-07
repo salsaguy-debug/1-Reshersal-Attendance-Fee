@@ -18,7 +18,10 @@ import {
   RotateCcw,
   Calendar,
   HardDrive,
-  BookOpen
+  BookOpen,
+  Calculator,
+  UserX,
+  Download
 } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
 
@@ -35,12 +38,17 @@ interface MoreActionsDropdownProps {
   onSyncCalendarEvents?: () => void;
   onForceUpdateMonths?: () => void;
   onExportToDrive?: () => void;
+  onExportCsv?: () => void;
+  onAddExclusion?: () => void;
+  onBulkImportCsv?: () => void;
+  onPurgeExclusions?: () => void;
   isSyncing: boolean;
   activeView: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config';
   setActiveView: (view: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config') => void;
   onResetData?: () => void;
   onDeleteAllTestData?: () => void;
   onOpenSopRules?: () => void;
+  onOpenCalculator?: () => void;
   stats?: KpiSummaryData;
   theme?: 'dark' | 'light';
   lang?: Language;
@@ -53,12 +61,17 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
   onSyncCalendarEvents,
   onForceUpdateMonths,
   onExportToDrive,
+  onExportCsv,
+  onAddExclusion,
+  onBulkImportCsv,
+  onPurgeExclusions,
   isSyncing,
   activeView,
   setActiveView,
   onResetData,
   onDeleteAllTestData,
   onOpenSopRules,
+  onOpenCalculator,
   stats,
   theme = 'dark',
   lang = 'en',
@@ -296,6 +309,110 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
               </div>
             </button>
 
+            {/* Export CSV Action */}
+            {onExportCsv && (
+              <button
+                onClick={() => {
+                  onExportCsv();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-slate-100 text-slate-800' : 'hover:bg-slate-800/60 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 mt-0.5 shrink-0">
+                  <Download className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-indigo-500 flex items-center justify-between">
+                    <span>{isEs ? 'Exportar Pestaña a CSV' : 'Export Tab to CSV'}</span>
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono font-medium">CSV</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {isEs ? 'Descargar datos de la pestaña activa en archivo CSV' : 'Download active sheet records as CSV file'}
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Exclude Performer Action */}
+            {onAddExclusion && (
+              <button
+                onClick={() => {
+                  onAddExclusion();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-rose-50 text-slate-800' : 'hover:bg-rose-950/40 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 mt-0.5 shrink-0">
+                  <UserX className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-rose-500 flex items-center justify-between">
+                    <span>{isEs ? 'Excluir Integrante' : 'Exclude Performer'}</span>
+                    <span className="text-[10px] bg-rose-500/20 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded font-mono font-medium">Blocklist</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {isEs ? 'Agregar correo a la lista de depuración dinámica' : 'Add performer email to dynamic blocklist'}
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Bulk CSV Import Action */}
+            {onBulkImportCsv && (
+              <button
+                onClick={() => {
+                  onBulkImportCsv();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-purple-50 text-slate-800' : 'hover:bg-purple-950/40 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 mt-0.5 shrink-0">
+                  <FileUp className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-purple-500 flex items-center justify-between">
+                    <span>{isEs ? 'Importación Masiva CSV' : 'Bulk CSV Import'}</span>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded font-mono font-medium">Bulk</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {isEs ? 'Importación masiva de correos excluidos desde CSV' : 'Batch import multiple excluded emails from CSV text'}
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Scrub & Purge Exclusions Action */}
+            {onPurgeExclusions && (
+              <button
+                onClick={() => {
+                  onPurgeExclusions();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-amber-50 text-slate-800' : 'hover:bg-amber-950/40 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 mt-0.5 shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-amber-500 flex items-center justify-between">
+                    <span>{isEs ? 'Depurar Exclusiones Ahora' : 'Scrub & Purge Exclusions Now'}</span>
+                    <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded font-mono font-medium">Purge</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {isEs ? 'Depurar todos los integrantes excluidos de las listas' : 'Scrub all excluded performers from rehearsal sheets'}
+                  </p>
+                </div>
+              </button>
+            )}
+
             {/* 2. Sync (Rev 7.4) */}
             <button
               onClick={handleTriggerSync}
@@ -518,6 +635,25 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
                 )}
               </div>
             </button>
+
+            {/* 8. Popup Fee Calculator Widget */}
+            {onOpenCalculator && (
+              <button
+                onClick={() => {
+                  onOpenCalculator();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                  isLight ? 'hover:bg-indigo-50 text-slate-800' : 'hover:bg-indigo-950/40 text-slate-100'
+                }`}
+              >
+                <Calculator className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div className="flex-1 flex items-center justify-between text-xs">
+                  <span>{lang === 'es' ? 'Calculadora de Cuotas SOP' : 'Fee & Balance Calculator'}</span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">Pop-up</span>
+                </div>
+              </button>
+            )}
 
             {/* Section 3: Data Management & Reset */}
             {(onDeleteAllTestData || onResetData) && (

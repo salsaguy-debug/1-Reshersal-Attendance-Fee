@@ -15,7 +15,8 @@ import {
   X,
   TrendingUp,
   Sparkles,
-  UserX
+  UserX,
+  Trash2
 } from 'lucide-react';
 import {
   Performer,
@@ -48,6 +49,7 @@ interface PerformerDetailViewProps {
   onToggleExclusion?: (email: string, name: string) => void;
   payments?: PaymentTransaction[];
   onAddPayment?: (payment: PaymentTransaction) => void;
+  onDeletePayment?: (id: string) => void;
 }
 
 export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
@@ -60,7 +62,8 @@ export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
   onUpdateRecord,
   onToggleExclusion,
   payments = [],
-  onAddPayment
+  onAddPayment,
+  onDeletePayment
 }) => {
   const isLight = theme === 'light';
   const isEs = lang === 'es';
@@ -779,6 +782,7 @@ SOP Compliance Engine Rev 7.4`;
                           <th className="p-3">Método</th>
                           <th className="p-3 text-right">Monto Pagado</th>
                           <th className="p-3">Notas</th>
+                          {onDeletePayment && <th className="p-3 text-center">Acción</th>}
                         </tr>
                       </thead>
                       <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
@@ -791,6 +795,19 @@ SOP Compliance Engine Rev 7.4`;
                               +${pay.amount.toFixed(2)}
                             </td>
                             <td className="p-3 text-slate-400">{pay.notes || '-'}</td>
+                            {onDeletePayment && (
+                              <td className="p-3 text-center">
+                                <button
+                                  onClick={() => onDeletePayment(pay.id)}
+                                  className={`p-1.5 rounded transition-colors ${
+                                    isLight ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' : 'text-slate-500 hover:text-rose-400 hover:bg-rose-950/50'
+                                  }`}
+                                  title={isEs ? 'Eliminar registro de pago' : 'Delete payment transaction'}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
