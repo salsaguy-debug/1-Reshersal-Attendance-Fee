@@ -174,9 +174,12 @@ export default function App() {
   const isFirstRender = useRef(true);
   const isRemoteUpdating = useRef(false);
 
-  // Initial Fetch from Shared Server Database for Multi-User Real-Time Sync
+  // Initial Boot Sync & Background Auto-Sync Engine
   useEffect(() => {
-    const fetchSharedData = async () => {
+    let isSubscribed = true;
+
+    const initBootSync = async () => {
+      let isBackendConnected = false;
       try {
         const res = await fetch('/api/shared-data');
         if (res.ok) {
@@ -196,19 +199,38 @@ export default function App() {
             if (Array.isArray(sData.payments) && sData.payments.length > 0) setPayments(sData.payments);
             if (json.revision) setSharedRevision(json.revision);
             setSharedSyncStatus('connected');
+            isBackendConnected = true;
             setTimeout(() => { isRemoteUpdating.current = false; }, 350);
           }
         }
       } catch (err) {
-        console.warn('Shared DB endpoint offline, defaulting to local storage:', err);
-        setSharedSyncStatus('offline');
+        console.warn('Shared DB endpoint offline (GitHub Pages static host), switching to direct Live Google Sheet sync:', err);
+      }
+
+      // If backend API is not present (GitHub Pages static site), run direct live Google Sheet sync immediately
+      if (!isBackendConnected && isSubscribed) {
+        setSharedSyncStatus('connected');
+        await runSyncAlgorithm({ silent: true });
       }
     };
 
-    fetchSharedData();
+    initBootSync();
+
     // Instant Scrub of Legacy Saturday Fallback Dates
     const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
     setRecords(prev => prev.filter(r => !legacySat.has(r.date)));
+
+    // 15-second background auto-sync timer for multi-browser real-time parity
+    const syncInterval = setInterval(() => {
+      if (isSubscribed) {
+        runSyncAlgorithm({ silent: true });
+      }
+    }, 15000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(syncInterval);
+    };
   }, []);
 
   // Helper to extract & sync unique performers list from attendance records and form responses
@@ -609,7 +631,7 @@ export default function App() {
   };
 
   // Sync All Data (Rev 7.4) algorithm simulation
-  const runSyncAlgorithm = async () => {
+  const runSyncAlgorithm = async (options?: { silent?: boolean }) => {
     setIsSyncing(true);
 
     try {
@@ -747,15 +769,20 @@ export default function App() {
       };
 
       setSyncStats(statsObj);
-      setShowSyncModal(true);
+      setSharedSyncStatus('connected');
 
-      showToast(
-        lang === 'es'
-          ? '¡Sincronización de Google Calendar, Form Responses y Penalizaciones Completada!'
-          : 'Attendance, Calendar & Fees Sync Complete! (BTG REV 7.4)'
-      );
+      if (!options?.silent) {
+        setShowSyncModal(true);
+        showToast(
+          lang === 'es'
+            ? '¡Sincronización de Google Calendar, Form Responses y Penalizaciones Completada!'
+            : 'Attendance, Calendar & Fees Sync Complete! (BTG REV 7.4)'
+        );
+      }
     } catch (err: any) {
-      showToast(`Sync Failed: ${err.message}`);
+      if (!options?.silent) {
+        showToast(`Sync Failed: ${err.message}`);
+      }
     } finally {
       setIsSyncing(false);
     }
