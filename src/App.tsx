@@ -188,7 +188,7 @@ export default function App() {
     }
   });
 
-  const [activeTab, setActiveTab] = useState<string>('Master Summary');
+  const [activeTab, setActiveTab] = useState<string>('2026 Master Accounting Ledger');
   const [activeView, setActiveView] = useState<'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config'>('sheet');
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [showSopModal, setShowSopModal] = useState<boolean>(false);

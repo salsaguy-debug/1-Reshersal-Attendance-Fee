@@ -114,14 +114,14 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   // Active Tab selection
   const tabs = useMemo(() => {
     return [
-      'Master Summary',
+      '2026 Master Accounting Ledger',
       ...availableMonths,
       'Form Responses 1',
       'Excluded these Performers'
     ];
   }, [availableMonths]);
 
-  const [activeTab, setActiveTab] = useState<string>('Master Summary');
+  const [activeTab, setActiveTab] = useState<string>('2026 Master Accounting Ledger');
 
   // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
@@ -682,7 +682,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
           const isActive = activeTab === tabName;
           let displayTabName = translateMonthStr(tabName, (lang || 'en') as Language);
           if (isEs) {
-            if (tabName === 'Master Summary') displayTabName = 'Resumen Maestro';
+            if (tabName === '2026 Master Accounting Ledger' || tabName === 'Master Summary') displayTabName = 'Libro Mayor Contable 2026';
             if (tabName === 'Form Responses 1') displayTabName = 'Respuestas del Formulario 1';
             if (tabName === 'Excluded these Performers') displayTabName = 'Integrantes Excluidos';
           }
@@ -703,11 +703,11 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
             >
               <FileSpreadsheet className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-500' : isLight ? 'text-slate-400' : 'text-slate-500'}`} />
               {displayTabName}
-              {tabName === 'Master Summary' && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                  isLight ? 'bg-indigo-100 text-indigo-700' : 'bg-indigo-900/60 text-indigo-300'
+              {(tabName === '2026 Master Accounting Ledger' || tabName === 'Master Summary') && (
+                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                  isLight ? 'bg-purple-100 text-purple-700' : 'bg-purple-900/60 text-purple-300'
                 }`}>
-                  {isEs ? 'Agregado' : 'Aggregate'}
+                  {isEs ? 'Maestro 12 Meses' : '12-Mo Ledger'}
                 </span>
               )}
               {tabName === 'Excluded these Performers' && exclusions.length > 0 && (
@@ -723,6 +723,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
       </div>
 
       {/* Filter & Search Toolbar */}
+      {!(activeTab === '2026 Master Accounting Ledger' || activeTab === 'Master Summary') && (
       <div className={`p-3 border-b flex flex-col sm:flex-row items-center justify-between gap-3 text-xs transition-colors ${
         isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/90 border-slate-800 text-slate-200'
       }`}>
@@ -830,6 +831,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
           </div>
         )}
       </div>
+      )}
 
       {/* Tab 1: Combined Master Summary & 2026 Accounting Ledger Sheet */}
       {activeTab === 'Master Summary' && (
