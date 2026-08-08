@@ -194,7 +194,9 @@ export default function App() {
   const [showSopModal, setShowSopModal] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
-  const [showDebtCollectionModal, setShowDebtCollectionModal] = useState<boolean>(false);
+  const [syncStats, setSyncStats] = useState<SyncStats | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [editingPerformer, setEditingPerformer] = useState<Performer | null>(null);
   const [editName, setEditName] = useState<string>('');
   const [editEmail, setEditEmail] = useState<string>('');
