@@ -8,6 +8,7 @@ import {
   Mail,
   Filter,
   ChevronDown,
+  ChevronRight,
   X,
   AlertCircle,
   Check,
@@ -109,6 +110,16 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   const [selectedEmailFilter, setSelectedEmailFilter] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<string>('ALL');
   const [attendedFilter, setAttendedFilter] = useState<string>('ALL');
+
+  // Expandable Master Summary Rows State
+  const [expandedMasterRows, setExpandedMasterRows] = useState<Record<string, boolean>>({});
+
+  const toggleMasterRow = (email: string) => {
+    setExpandedMasterRows(prev => ({
+      ...prev,
+      [email]: !prev[email]
+    }));
+  };
 
   // Multi-Record Selection State for Batch Operations
   const [selectedRecordIds, setSelectedRecordIds] = useState<Set<string>>(new Set());
@@ -844,6 +855,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               <tr className={`border-b uppercase font-mono text-[11px] tracking-wider transition-colors ${
                 isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-950 text-slate-400 border-slate-800'
               }`}>
+                <th className="p-3 w-10 text-center"></th>
                 {renderSortableHeader('performerName', isEs ? 'Nombre del Integrante' : 'Performer Name')}
                 {renderSortableHeader('performerEmail', isEs ? 'Correo Electrónico' : 'Performer Email')}
                 {availableMonths.map(m => (
@@ -858,70 +870,175 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
             <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
               {sortedMasterRows.length === 0 ? (
                 <tr>
-                  <td colSpan={availableMonths.length + 4} className={`p-8 text-center ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                  <td colSpan={availableMonths.length + 5} className={`p-8 text-center ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                     {isEs 
                       ? 'No se encontraron registros en el Resumen Maestro. Ejecuta "Sincronizar Datos" para consolidar.' 
                       : 'No performer records found in Master Summary. Run Sync All Data to aggregate.'}
                   </td>
                 </tr>
               ) : (
-                sortedMasterRows.map((row, idx) => (
-                  <tr key={idx} className={`transition-colors ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-800/40'}`}>
-                    <td className={`p-3 font-medium flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        isLight ? 'bg-indigo-100 border border-indigo-200 text-indigo-700' : 'bg-indigo-950 border border-indigo-700/50 text-indigo-300'
+                sortedMasterRows.map((row, idx) => {
+                  const isExpanded = !!expandedMasterRows[row.performerEmail];
+
+                  return (
+                    <React.Fragment key={idx}>
+                      <tr className={`transition-colors ${
+                        isLight
+                          ? isExpanded ? 'bg-indigo-50/60 font-semibold' : 'hover:bg-slate-50'
+                          : isExpanded ? 'bg-indigo-950/40 font-semibold' : 'hover:bg-slate-800/40'
                       }`}>
-                        {row.performerName.charAt(0)}
-                      </div>
-                      {row.performerName}
-                    </td>
-                    <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{row.performerEmail}</td>
-                    {availableMonths.map(m => {
-                      const fee = row.monthlyFees[m] || 0;
-                      return (
-                        <td key={m} className="p-3 text-right font-mono">
-                          {fee > 0 ? (
-                            <span className={`font-semibold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>${fee.toFixed(2)}</span>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => toggleMasterRow(row.performerEmail)}
+                            className={`p-1.5 rounded-lg transition-colors border ${
+                              isExpanded
+                                ? isLight ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'bg-indigo-900 border-indigo-700 text-indigo-300'
+                                : isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-500' : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-400'
+                            }`}
+                            title={isExpanded ? 'Collapse 2026 Monthly Schedule' : 'Expand 2026 Monthly Schedule'}
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4 text-indigo-500" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </button>
+                        </td>
+                        <td className={`p-3 font-medium flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            isLight ? 'bg-indigo-100 border border-indigo-200 text-indigo-700' : 'bg-indigo-950 border border-indigo-700/50 text-indigo-300'
+                          }`}>
+                            {row.performerName.charAt(0)}
+                          </div>
+                          {row.performerName}
+                        </td>
+                        <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{row.performerEmail}</td>
+                        {availableMonths.map(m => {
+                          const fee = row.monthlyFees[m] || 0;
+                          return (
+                            <td key={m} className="p-3 text-right font-mono">
+                              {fee > 0 ? (
+                                <span className={`font-semibold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>${fee.toFixed(2)}</span>
+                              ) : (
+                                <span className={isLight ? 'text-slate-400' : 'text-slate-600'}>$0.00</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td className="p-3 text-right font-mono font-bold text-sm">
+                          {row.totalFees > 0 ? (
+                            <span className={`px-2.5 py-1 rounded border ${
+                              isLight ? 'text-rose-700 bg-rose-50 border-rose-200' : 'text-rose-400 bg-rose-950/60 border-rose-800/80'
+                            }`}>
+                              ${row.totalFees.toFixed(2)}
+                            </span>
                           ) : (
-                            <span className={isLight ? 'text-slate-400' : 'text-slate-600'}>$0.00</span>
+                            <span className={`px-2 py-1 rounded border ${
+                              isLight ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-emerald-400 bg-emerald-950/60 border-emerald-800/80'
+                            }`}>
+                              $0.00
+                            </span>
                           )}
                         </td>
-                      );
-                    })}
-                    <td className="p-3 text-right font-mono font-bold text-sm">
-                      {row.totalFees > 0 ? (
-                        <span className={`px-2.5 py-1 rounded border ${
-                          isLight ? 'text-rose-700 bg-rose-50 border-rose-200' : 'text-rose-400 bg-rose-950/60 border-rose-800/80'
-                        }`}>
-                          ${row.totalFees.toFixed(2)}
-                        </span>
-                      ) : (
-                        <span className={`px-2 py-1 rounded border ${
-                          isLight ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-emerald-400 bg-emerald-950/60 border-emerald-800/80'
-                        }`}>
-                          $0.00
-                        </span>
+                        <td className="p-3 text-center">
+                          {row.totalFees > 0 ? (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                              isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-950/80 text-rose-300 border-rose-800'
+                            }`}>
+                              <AlertCircle className={`w-3 h-3 ${isLight ? 'text-rose-600' : 'text-rose-400'}`} />
+                              {t.outstanding}
+                            </span>
+                          ) : (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                              isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                            }`}>
+                              <Check className={`w-3 h-3 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
+                              {t.paidInFull}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+
+                      {/* Expandable 2026 Monthly Rehearsal Schedule Cards Drawer */}
+                      {isExpanded && (
+                        <tr className={isLight ? 'bg-slate-50/90 border-b border-indigo-200' : 'bg-slate-950/80 border-b border-indigo-900/60'}>
+                          <td colSpan={availableMonths.length + 5} className="p-4">
+                            <div className={`p-4 rounded-2xl border shadow-md transition-colors ${
+                              isLight ? 'bg-white border-indigo-100' : 'bg-slate-900 border-indigo-900/50'
+                            }`}>
+                              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+                                <div className="flex items-center gap-2 font-bold text-xs text-indigo-500">
+                                  <Calendar className="w-4 h-4 text-indigo-500" />
+                                  <span>2026 Monthly Rehearsal SOP Schedule ({row.performerName})</span>
+                                </div>
+                                <span className={`text-[11px] font-mono px-2 py-0.5 rounded border ${
+                                  isLight ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-950 text-indigo-300 border-indigo-800'
+                                }`}>
+                                  Base Dues: $15/mo | Penalty Rule: $5/session
+                                </span>
+                              </div>
+
+                              {/* Monthly Cards Row */}
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2.5">
+                                {availableMonths.map(m => {
+                                  const fee = row.monthlyFees[m] || 0;
+                                  const shortMonth = translateMonthStr(m, (lang || 'en') as Language).toUpperCase();
+                                  const isOverdue = fee > 0;
+                                  const isPendingMonth = m === 'August 2026' || m === 'September 2026' || m === 'October 2026' || m === 'November 2026' || m === 'December 2026';
+
+                                  return (
+                                    <div
+                                      key={m}
+                                      className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-between ${
+                                        isOverdue
+                                          ? isLight
+                                            ? 'bg-rose-50/90 border-rose-200 text-rose-900 shadow-xs'
+                                            : 'bg-rose-950/40 border-rose-900/60 text-rose-100 shadow-xs'
+                                          : isPendingMonth
+                                            ? isLight
+                                              ? 'bg-slate-50 border-slate-200 text-slate-600'
+                                              : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                                            : isLight
+                                              ? 'bg-emerald-50/60 border-emerald-200 text-emerald-900'
+                                              : 'bg-emerald-950/30 border-emerald-900/60 text-emerald-200'
+                                      }`}
+                                    >
+                                      <div className="text-[10px] font-bold tracking-wider uppercase font-mono text-slate-500 mb-1">
+                                        {shortMonth}
+                                      </div>
+                                      <div className="text-xs font-mono my-1 font-extrabold">
+                                        {fee > 0 ? (
+                                          <span className="text-rose-500 font-bold">${fee.toFixed(0)} <span className="text-[10px] font-normal text-rose-400">fee</span></span>
+                                        ) : (
+                                          <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>$0 <span className="text-[10px] text-slate-400">/ $15</span></span>
+                                        )}
+                                      </div>
+                                      <div className="mt-1">
+                                        {isOverdue ? (
+                                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30">
+                                            {isEs ? 'Recargo' : 'Overdue'}
+                                          </span>
+                                        ) : isPendingMonth ? (
+                                          <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20">
+                                            {isEs ? 'Pendiente' : 'Pending'}
+                                          </span>
+                                        ) : (
+                                          <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                                            {isEs ? 'Al Día' : 'Current'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td className="p-3 text-center">
-                      {row.totalFees > 0 ? (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
-                          isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-950/80 text-rose-300 border-rose-800'
-                        }`}>
-                          <AlertCircle className={`w-3 h-3 ${isLight ? 'text-rose-600' : 'text-rose-400'}`} />
-                          {t.outstanding}
-                        </span>
-                      ) : (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
-                          isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                        }`}>
-                          <Check className={`w-3 h-3 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
-                          {t.paidInFull}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                    </React.Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>
