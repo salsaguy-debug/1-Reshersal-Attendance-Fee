@@ -891,13 +891,56 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                             )}
                           </button>
                         </td>
-                        <td className={`p-3 font-medium flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                            isLight ? 'bg-indigo-100 border border-indigo-200 text-indigo-700' : 'bg-indigo-950 border border-indigo-700/50 text-indigo-300'
-                          }`}>
-                            {row.performerName.charAt(0)}
+                        <td className={`p-3 font-medium flex items-center justify-between gap-2 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              isLight ? 'bg-indigo-100 border border-indigo-200 text-indigo-700' : 'bg-indigo-950 border border-indigo-700/50 text-indigo-300'
+                            }`}>
+                              {row.performerName.charAt(0)}
+                            </div>
+                            <span>{row.performerName}</span>
                           </div>
-                          {row.performerName}
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const pObj = performers.find(p => p.email.toLowerCase().trim() === row.performerEmail.toLowerCase().trim()) || {
+                                  id: `p_${row.performerEmail}`,
+                                  name: row.performerName,
+                                  email: row.performerEmail,
+                                  role: 'Dancer'
+                                };
+                                if (onEditPerformer) onEditPerformer(pObj);
+                              }}
+                              className={`p-1 rounded transition-colors border ${
+                                isLight
+                                  ? 'bg-slate-100 hover:bg-indigo-100 border-slate-300 text-slate-600 hover:text-indigo-700'
+                                  : 'bg-slate-900 hover:bg-indigo-950 border-slate-800 text-slate-400 hover:text-indigo-300'
+                              }`}
+                              title={isEs ? `✏️ Editar perfil de ${row.performerName}` : `✏️ Edit ${row.performerName}'s profile`}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onInspectPerformer) {
+                                  onInspectPerformer(row.performerEmail);
+                                } else if (setActiveView) {
+                                  setActiveView('performer');
+                                }
+                              }}
+                              className={`p-1 rounded transition-colors border ${
+                                isLight
+                                  ? 'bg-slate-100 hover:bg-indigo-100 border-slate-300 text-slate-600 hover:text-indigo-700'
+                                  : 'bg-slate-900 hover:bg-indigo-950 border-slate-800 text-slate-400 hover:text-indigo-300'
+                              }`}
+                              title={isEs ? `👁️ Inspeccionar expediente de ${row.performerName}` : `👁️ Inspect ${row.performerName}'s ledger`}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                         <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{row.performerEmail}</td>
                         {availableMonths.map(m => {

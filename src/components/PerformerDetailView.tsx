@@ -53,6 +53,8 @@ interface PerformerDetailViewProps {
   onAddPayment?: (payment: PaymentTransaction) => void;
   onDeletePayment?: (id: string) => void;
   onUpdatePerformer?: (oldEmail: string, updated: Performer) => void;
+  initialSelectedEmail?: string;
+  onEditPerformer?: (p: Performer) => void;
 }
 
 export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
@@ -67,15 +69,23 @@ export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
   payments = [],
   onAddPayment,
   onDeletePayment,
-  onUpdatePerformer
+  onUpdatePerformer,
+  initialSelectedEmail,
+  onEditPerformer
 }) => {
   const isLight = theme === 'light';
   const isEs = lang === 'es';
 
   // Selected Performer State
   const [selectedEmail, setSelectedEmail] = useState<string>(
-    performers.length > 0 ? performers[0].email : ''
+    initialSelectedEmail && initialSelectedEmail.length > 0 ? initialSelectedEmail : (performers.length > 0 ? performers[0].email : '')
   );
+
+  React.useEffect(() => {
+    if (initialSelectedEmail) {
+      setSelectedEmail(initialSelectedEmail);
+    }
+  }, [initialSelectedEmail]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [directoryFilter, setDirectoryFilter] = useState<'all' | 'owed' | 'good' | 'excluded'>('all');
   const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>('ALL');
@@ -456,7 +466,7 @@ SOP Compliance Engine Rev 7.4`;
                         <div className="flex items-center gap-1 ml-1" onClick={e => e.stopPropagation()}>
                           <button
                             type="button"
-                            onClick={() => handleOpenEditPerformer(p)}
+                            onClick={() => onEditPerformer ? onEditPerformer(p) : handleOpenEditPerformer(p)}
                             className={`p-1.5 rounded-lg border transition-colors ${
                               isSelected
                                 ? 'bg-white/20 hover:bg-white/30 text-white border-white/30'

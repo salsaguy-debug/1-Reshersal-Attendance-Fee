@@ -195,9 +195,33 @@ export default function App() {
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
   const [showDebtCollectionModal, setShowDebtCollectionModal] = useState<boolean>(false);
-  const [syncStats, setSyncStats] = useState<SyncStats | null>(null);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [editingPerformer, setEditingPerformer] = useState<Performer | null>(null);
+  const [editName, setEditName] = useState<string>('');
+  const [editEmail, setEditEmail] = useState<string>('');
+  const [editRole, setEditRole] = useState<string>('Dancer');
+  const [selectedEmail, setSelectedEmail] = useState<string>('');
+
+  const handleOpenEditPerformer = (p: Performer) => {
+    setEditingPerformer(p);
+    setEditName(p.name);
+    setEditEmail(p.email);
+    setEditRole(p.role || 'Dancer');
+  };
+
+  const handleSaveEditedPerformer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPerformer) return;
+    const oldEmail = editingPerformer.email;
+    const updated: Performer = {
+      ...editingPerformer,
+      name: editName.trim(),
+      email: editEmail.trim(),
+      role: editRole as any
+    };
+    handleUpdatePerformer(oldEmail, updated);
+    setEditingPerformer(null);
+    setToastMessage(`Updated performer profile for ${editName.trim()}`);
+  };
 
   // Debounced Auto-Save Status & Multi-User Real-Time Sync State
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -1584,6 +1608,11 @@ export default function App() {
             setActiveView={setActiveView}
             onResetData={resetAllDataToDefault}
             onOpenSopRules={() => setShowSopModal(true)}
+            onEditPerformer={handleOpenEditPerformer}
+            onInspectPerformer={email => {
+              setSelectedEmail(email);
+              setActiveView('performer');
+            }}
           />
         )}
 
@@ -1751,9 +1780,114 @@ export default function App() {
       <CalculatorWidget
         isOpen={showCalculator}
         onClose={() => setShowCalculator(false)}
+        performers={performers}
+        records={records}
         theme={theme}
         lang={lang}
       />
+
+      {/* Global Edit Performer Profile Modal */}
+      {editingPerformer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl border p-6 transition-all ${
+            isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-900 border-slate-800 text-slate-100'
+          }`}>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-indigo-600 text-white shadow-md">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base tracking-tight">
+                    {lang === 'es' ? 'Editar Perfil del Integrante' : 'Edit Performer Profile'}
+                  </h3>
+                  <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {editingPerformer.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingPerformer(null)}
+                className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedPerformer} className="space-y-4">
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  {lang === 'es' ? 'Nombre Completo' : 'Full Performer Name'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-medium border focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                  }`}
+                  placeholder="e.g. Adevalle12"
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  {lang === 'es' ? 'Correo Electrónico' : 'Email Address'}
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={editEmail}
+                  onChange={e => setEditEmail(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-medium border focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                  }`}
+                  placeholder="adevalle12@gmail.com"
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  {lang === 'es' ? 'Rol en la Compañía' : 'Company Role'}
+                </label>
+                <select
+                  value={editRole}
+                  onChange={e => setEditRole(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-medium border focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                  }`}
+                >
+                  <option value="Dancer">Dancer (Bailarín)</option>
+                  <option value="Lead Dancer">Lead Dancer (Bailarín Principal)</option>
+                  <option value="Instructor">Instructor</option>
+                  <option value="Director">Director</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingPerformer(null)}
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                    isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+                  }`}
+                >
+                  {lang === 'es' ? 'Cancelar' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{lang === 'es' ? 'Guardar Cambios' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Debt Collection Recovery Intake Modal */}
       <DebtCollectionModal
