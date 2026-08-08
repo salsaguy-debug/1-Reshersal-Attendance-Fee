@@ -64,6 +64,7 @@ import { LiveImportModal } from './components/LiveImportModal';
 import { MoreActionsDropdown } from './components/MoreActionsDropdown';
 import { SyncSummaryModal, SyncStats } from './components/SyncSummaryModal';
 import { CalculatorWidget } from './components/CalculatorWidget';
+import { DebtCollectionModal } from './components/DebtCollectionModal';
 import { fetchLiveGoogleSheetData } from './utils/googleSheetClient';
 
 export default function App() {
@@ -163,6 +164,7 @@ export default function App() {
   const [showSopModal, setShowSopModal] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
+  const [showDebtCollectionModal, setShowDebtCollectionModal] = useState<boolean>(false);
   const [syncStats, setSyncStats] = useState<SyncStats | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -1442,6 +1444,7 @@ export default function App() {
               onDeleteAllTestData={deleteAllTestData}
               onOpenSopRules={() => setShowSopModal(true)}
               onOpenCalculator={() => setShowCalculator(true)}
+              onOpenDebtCollection={() => setShowDebtCollectionModal(true)}
               stats={kpiStats}
               theme={theme}
               lang={lang}
@@ -1706,6 +1709,19 @@ export default function App() {
       <CalculatorWidget
         isOpen={showCalculator}
         onClose={() => setShowCalculator(false)}
+        theme={theme}
+        lang={lang}
+      />
+
+      {/* Debt Collection Recovery Intake Modal */}
+      <DebtCollectionModal
+        isOpen={showDebtCollectionModal}
+        onClose={() => setShowDebtCollectionModal(false)}
+        performers={performers}
+        records={records}
+        payments={payments}
+        config={config}
+        onAddPayment={pay => setPayments(prev => [pay, ...prev])}
         theme={theme}
         lang={lang}
       />

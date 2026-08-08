@@ -21,7 +21,8 @@ import {
   BookOpen,
   Calculator,
   UserX,
-  Download
+  Download,
+  Scale
 } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
 
@@ -42,6 +43,7 @@ interface MoreActionsDropdownProps {
   onAddExclusion?: () => void;
   onBulkImportCsv?: () => void;
   onPurgeExclusions?: () => void;
+  onOpenDebtCollection?: () => void;
   isSyncing: boolean;
   activeView: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config';
   setActiveView: (view: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config') => void;
@@ -72,6 +74,7 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
   onDeleteAllTestData,
   onOpenSopRules,
   onOpenCalculator,
+  onOpenDebtCollection,
   stats,
   theme = 'dark',
   lang = 'en',
@@ -309,6 +312,32 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
                   </div>
                   <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                     {lang === 'es' ? 'Calculadora interactiva de cuotas, recargos y saldos' : 'Interactive dues preset math, late fee calculator & tape history'}
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Debt Collection & Fees */}
+            {onOpenDebtCollection && (
+              <button
+                onClick={() => {
+                  onOpenDebtCollection();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-purple-50 text-slate-800' : 'hover:bg-purple-950/40 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 mt-0.5 shrink-0">
+                  <Scale className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-purple-500 flex items-center justify-between">
+                    <span>{lang === 'es' ? 'Recuperación y Cobro de Deudas' : 'Debt Collection & Fees'}</span>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded font-mono font-bold">Recovery</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {lang === 'es' ? 'Recuperar cuotas morosas y recargos por inasistencia' : 'Recover overdue late fees & dues'}
                   </p>
                 </div>
               </button>
