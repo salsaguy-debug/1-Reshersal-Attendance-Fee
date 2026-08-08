@@ -49,7 +49,8 @@ import {
   fetchGoogleCalendarEvents,
   populateMissingRehearsalDates,
   DEFAULT_CALENDAR_ID,
-  normalizeDateString
+  normalizeDateString,
+  isRehearsalDay
 } from './utils/googleCalendar';
 
 import { translations, Language } from './utils/translations';
@@ -128,10 +129,7 @@ export default function App() {
 
       const deduppedMap = new Map<string, AttendanceRecord>();
       parsed
-        .filter((r: AttendanceRecord) => {
-          const normDate = normalizeDateString(r.date);
-          return !legacySat.has(normDate) && r.day !== 'Sat' && r.day !== 'Saturday';
-        })
+        .filter((r: AttendanceRecord) => isRehearsalDay(r.date, r.day))
         .forEach((r: AttendanceRecord) => {
           const normDate = normalizeDateString(r.date);
           const email = (r.performerEmail || '').toLowerCase().trim();
@@ -726,6 +724,8 @@ export default function App() {
         if (!email || excludedEmails.has(email)) return;
 
         const normDate = normalizeDateString(fr.practiceDate);
+        if (!isRehearsalDay(normDate)) return;
+
         const key = `${normDate}_${email}`;
         const existingRec = recordMap.get(key);
         const checkInAttended: AttendedStatus = fr.checkInStatus === 'Yes' ? 'Yes' : 'No';

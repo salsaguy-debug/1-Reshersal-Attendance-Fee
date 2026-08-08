@@ -76,6 +76,31 @@ export function normalizeDateString(rawDate: string): string {
 }
 
 /**
+ * Validates whether a given date is a valid Mon/Wed rehearsal date.
+ * Automatically excludes non-rehearsal days such as Friday 2026-04-24 and Saturdays/Sundays.
+ */
+export function isRehearsalDay(dateStr: string, dayStr?: string): boolean {
+  const normDate = normalizeDateString(dateStr);
+  if (!normDate) return false;
+  // Specific non-rehearsal date blacklist
+  if (normDate === '2026-04-24' || normDate === '2026-04-04' || normDate === '2026-04-11' || normDate === '2026-04-18' || normDate === '2026-04-25') {
+    return false;
+  }
+
+  try {
+    const parts = normDate.split('-').map(Number);
+    if (parts.length === 3) {
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      const dayNum = d.getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+      return dayNum === 1 || dayNum === 3; // Strictly Mondays (1) and Wednesdays (3)
+    }
+  } catch {}
+
+  const dLower = (dayStr || '').trim().toLowerCase();
+  return dLower === 'mon' || dLower === 'monday' || dLower === 'wed' || dLower === 'wednesday';
+}
+
+/**
  * Uses fetched Google Calendar events to populate missing rehearsal dates
  * for active performers in the application.
  */
@@ -87,16 +112,12 @@ export function populateMissingRehearsalDates(
   baselineDate: string = '2026-04-01'
 ): { updatedRecords: AttendanceRecord[]; addedCount: number } {
   if (!calendarEvents || calendarEvents.length === 0 || !performers || performers.length === 0) {
-    return { updatedRecords: existingRecords, addedCount: 0 };
+    return { updatedRecords: existingRecords.filter(r => isRehearsalDay(r.date, r.day)), addedCount: 0 };
   }
 
-  const legacySatDates = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
   const recordMap = new Map<string, AttendanceRecord>();
   existingRecords
-    .filter(r => {
-      const normDate = normalizeDateString(r.date);
-      return !legacySatDates.has(normDate) && r.day !== 'Sat' && r.day !== 'Saturday';
-    })
+    .filter(r => isRehearsalDay(r.date, r.day))
     .forEach(r => {
       const normDate = normalizeDateString(r.date);
       const emailLower = (r.performerEmail || '').toLowerCase().trim();
@@ -125,8 +146,8 @@ export function populateMissingRehearsalDates(
   let addedCount = 0;
 
   calendarEvents.forEach(evt => {
-    const eventDate = evt.date;
-    if (!eventDate || eventDate < baselineDate) return;
+    const eventDate = normalizeDateString(evt.date);
+    if (!eventDate || eventDate < baselineDate || !isRehearsalDay(eventDate)) return;
 
     // Build map of attendee email -> RSVP status from Google Calendar event if available
     const attendeeRsvpMap = new Map<string, 'Yes' | 'No' | 'Maybe' | 'Awaiting'>();
