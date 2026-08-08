@@ -1333,6 +1333,8 @@ export default function App() {
     showToast(lang === 'es' ? `Perfil de ${updated.name} actualizado correctamente.` : `Updated ${updated.name}'s performer profile.`);
   };
 
+  const isLight = theme === 'light';
+
   return (
     <div className={`min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200 ${
       isLight ? 'bg-slate-100 text-slate-900' : 'bg-slate-950 text-slate-100'
