@@ -61,8 +61,8 @@ interface SpreadsheetViewProps {
   onRunSync?: () => void;
   onOpenLiveImport?: () => void;
   onAddMonthTab?: (month: string) => void;
-  activeView?: 'sheet' | 'reports' | 'checkin' | 'script' | 'config';
-  setActiveView?: (view: 'sheet' | 'reports' | 'checkin' | 'script' | 'config') => void;
+  activeView?: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config';
+  setActiveView?: (view: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config') => void;
   onOpenSopRules?: () => void;
   onResetData?: () => void;
   onDeleteAllTestData?: () => void;
