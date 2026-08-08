@@ -661,10 +661,45 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
 
         {/* Sync & Action Tools */}
         <div className="flex items-center flex-wrap gap-2">
+          {onRunSync && (
+            <button
+              type="button"
+              onClick={onRunSync}
+              disabled={isSyncing}
+              className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 shadow-md ${
+                isLight
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                  : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30'
+              } ${isSyncing ? 'opacity-50 cursor-wait' : ''}`}
+              title={isEs ? 'Ejecutar algoritmo de sincronización (Rev 7.4)' : 'Run Sync Algorithm across Calendar & Forms (Rev 7.4)'}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-white' : 'text-indigo-200'}`} />
+              <span>Sync (Rev 7.4)</span>
+            </button>
+          )}
+
+          {onForceUpdateMonths && (
+            <button
+              type="button"
+              onClick={onForceUpdateMonths}
+              disabled={isSyncing}
+              className={`px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+                isLight
+                  ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200'
+                  : 'bg-indigo-950/60 text-indigo-300 hover:bg-indigo-900/80 border-indigo-800'
+              }`}
+              title={isEs ? 'Forzar actualización de pestañas de mes' : 'Force Refresh All Month Tabs'}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-indigo-400' : ''}`} />
+              <span>{isEs ? 'Recargar Meses' : 'Refresh Months'}</span>
+            </button>
+          )}
+
           {availableMonths.includes(activeTab) && (
             <button
+              type="button"
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition-colors shadow"
+              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-medium transition-colors shadow"
             >
               <Plus className="w-3.5 h-3.5" />
               {isEs ? 'Agregar Registro' : 'Add Performer Record'}
@@ -719,40 +754,6 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
             </button>
           );
         })}
-
-        <div className="flex items-center gap-2 ml-auto shrink-0">
-          {onRunSync && (
-            <button
-              onClick={onRunSync}
-              disabled={isSyncing}
-              className={`px-3.5 py-2 text-xs font-bold rounded-t-lg transition-all whitespace-nowrap flex items-center gap-1.5 border-t border-x shadow-sm ${
-                isLight
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 shadow-indigo-500/20'
-                  : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 shadow-indigo-500/30'
-              } ${isSyncing ? 'opacity-50 cursor-wait' : ''}`}
-              title={isEs ? 'Ejecutar algoritmo de sincronización (Rev 7.4)' : 'Run Sync Algorithm across Calendar & Forms (Rev 7.4)'}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-white' : 'text-indigo-200'}`} />
-              <span>Sync (Rev 7.4)</span>
-            </button>
-          )}
-
-          {onForceUpdateMonths && (
-            <button
-              onClick={onForceUpdateMonths}
-              disabled={isSyncing}
-              className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-all whitespace-nowrap flex items-center gap-1.5 border-t border-x ${
-                isLight
-                  ? 'bg-indigo-100/70 text-indigo-700 hover:bg-indigo-200/80 border-indigo-200'
-                  : 'bg-indigo-950/60 text-indigo-300 hover:bg-indigo-900/80 border-indigo-800'
-              }`}
-              title={isEs ? 'Forzar actualización de pestañas de mes' : 'Force Refresh All Month Tabs'}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-indigo-400' : ''}`} />
-              <span>{isEs ? 'Recargar Meses' : 'Refresh Months'}</span>
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Filter & Search Toolbar */}
