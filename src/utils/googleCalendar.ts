@@ -60,6 +60,21 @@ export async function fetchGoogleCalendarEvents(
   }
 }
 
+export function normalizeDateString(rawDate: string): string {
+  if (!rawDate) return '';
+  const trimmed = rawDate.trim();
+  if (trimmed.includes('/')) {
+    const parts = trimmed.split('/');
+    if (parts.length === 3) {
+      const m = parts[0].padStart(2, '0');
+      const d = parts[1].padStart(2, '0');
+      const y = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+      return `${y}-${m}-${d}`;
+    }
+  }
+  return trimmed;
+}
+
 /**
  * Uses fetched Google Calendar events to populate missing rehearsal dates
  * for active performers in the application.
@@ -78,9 +93,33 @@ export function populateMissingRehearsalDates(
   const legacySatDates = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
   const recordMap = new Map<string, AttendanceRecord>();
   existingRecords
-    .filter(r => !legacySatDates.has(r.date) && r.day !== 'Sat' && r.day !== 'Saturday')
+    .filter(r => {
+      const normDate = normalizeDateString(r.date);
+      return !legacySatDates.has(normDate) && r.day !== 'Sat' && r.day !== 'Saturday';
+    })
     .forEach(r => {
-      recordMap.set(`${r.date}_${r.performerEmail.toLowerCase().trim()}`, r);
+      const normDate = normalizeDateString(r.date);
+      const emailLower = (r.performerEmail || '').toLowerCase().trim();
+      const key = `${normDate}_${emailLower}`;
+
+      let dayOfWeek = r.day;
+      try {
+        const parts = normDate.split('-').map(Number);
+        if (parts.length === 3) {
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'short' });
+        }
+      } catch {}
+
+      const cleanRec: AttendanceRecord = {
+        ...r,
+        date: normDate,
+        day: dayOfWeek || r.day
+      };
+
+      if (!recordMap.has(key) || (r.attended === 'Yes' && recordMap.get(key)?.attended !== 'Yes')) {
+        recordMap.set(key, cleanRec);
+      }
     });
 
   let addedCount = 0;

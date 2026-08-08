@@ -48,7 +48,8 @@ import {
 import {
   fetchGoogleCalendarEvents,
   populateMissingRehearsalDates,
-  DEFAULT_CALENDAR_ID
+  DEFAULT_CALENDAR_ID,
+  normalizeDateString
 } from './utils/googleCalendar';
 
 import { translations, Language } from './utils/translations';
@@ -123,9 +124,40 @@ export default function App() {
       const saved = localStorage.getItem('tradicion_records');
       const parsed = saved ? JSON.parse(saved) : INITIAL_ATTENDANCE_RECORDS;
       const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
-      return Array.isArray(parsed)
-        ? parsed.filter((r: AttendanceRecord) => !legacySat.has(r.date) && r.day !== 'Sat' && r.day !== 'Saturday')
-        : INITIAL_ATTENDANCE_RECORDS;
+      if (!Array.isArray(parsed)) return INITIAL_ATTENDANCE_RECORDS;
+
+      const deduppedMap = new Map<string, AttendanceRecord>();
+      parsed
+        .filter((r: AttendanceRecord) => {
+          const normDate = normalizeDateString(r.date);
+          return !legacySat.has(normDate) && r.day !== 'Sat' && r.day !== 'Saturday';
+        })
+        .forEach((r: AttendanceRecord) => {
+          const normDate = normalizeDateString(r.date);
+          const email = (r.performerEmail || '').toLowerCase().trim();
+          const key = `${normDate}_${email}`;
+
+          let dayOfWeek = r.day;
+          try {
+            const parts = normDate.split('-').map(Number);
+            if (parts.length === 3) {
+              const d = new Date(parts[0], parts[1] - 1, parts[2]);
+              dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'short' });
+            }
+          } catch {}
+
+          const cleanRec: AttendanceRecord = {
+            ...r,
+            date: normDate,
+            day: dayOfWeek || r.day
+          };
+
+          if (!deduppedMap.has(key) || (r.attended === 'Yes' && deduppedMap.get(key)?.attended !== 'Yes')) {
+            deduppedMap.set(key, cleanRec);
+          }
+        });
+
+      return Array.from(deduppedMap.values());
     } catch {
       return INITIAL_ATTENDANCE_RECORDS;
     }
@@ -679,15 +711,22 @@ export default function App() {
       const excludedEmails = new Set(exclusions.map(e => e.email.toLowerCase().trim()));
 
       // 2. Build attendance map and sync Form Check-Ins into Attendance Records
-      const recordMap = new Map<string, AttendanceRecord>(
-        baseRecords.map(r => [`${r.date}_${r.performerEmail.toLowerCase().trim()}`, r])
-      );
+      const recordMap = new Map<string, AttendanceRecord>();
+      baseRecords.forEach(r => {
+        const normDate = normalizeDateString(r.date);
+        const email = r.performerEmail.toLowerCase().trim();
+        const key = `${normDate}_${email}`;
+        if (!recordMap.has(key) || (r.attended === 'Yes' && recordMap.get(key)?.attended !== 'Yes')) {
+          recordMap.set(key, { ...r, date: normDate });
+        }
+      });
 
       activeFormResponses.forEach(fr => {
         const email = fr.performerEmail.toLowerCase().trim();
         if (!email || excludedEmails.has(email)) return;
 
-        const key = `${fr.practiceDate}_${email}`;
+        const normDate = normalizeDateString(fr.practiceDate);
+        const key = `${normDate}_${email}`;
         const existingRec = recordMap.get(key);
         const checkInAttended: AttendedStatus = fr.checkInStatus === 'Yes' ? 'Yes' : 'No';
         const frRsvp: RsvpStatus = fr.rsvpStatus || 'Awaiting';
