@@ -115,7 +115,6 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   const tabs = useMemo(() => {
     return [
       'Master Summary',
-      'Libro Mayor 2026',
       ...availableMonths,
       'Form Responses 1',
       'Excluded these Performers'
@@ -832,32 +831,35 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
         )}
       </div>
 
-
-
-      {/* Tab 1: Master Summary Sheet */}
+      {/* Tab 1: Combined Master Summary & 2026 Accounting Ledger Sheet */}
       {activeTab === 'Master Summary' && (
         <div className="overflow-x-auto">
           <table className={`w-full text-left text-xs border-collapse ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
             <thead>
               <tr className={`border-b uppercase font-mono text-[11px] tracking-wider transition-colors ${
-                isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-950 text-slate-400 border-slate-800'
+                isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-950 text-slate-300 border-slate-800'
               }`}>
                 <th className="p-3 w-10 text-center"></th>
-                {renderSortableHeader('performerName', isEs ? 'Nombre del Integrante' : 'Performer Name')}
-                {renderSortableHeader('performerEmail', isEs ? 'Correo Electrónico' : 'Performer Email')}
+                {renderSortableHeader('performerName', isEs ? 'Nombre del Integrante' : 'PERFORMER NAME')}
+                {renderSortableHeader('performerEmail', isEs ? 'Correo Electrónico' : 'EMAIL')}
+                <th className="p-3 text-center">STATUS</th>
+                <th className="p-3 text-right">TOTAL PAID</th>
+                <th className="p-3 text-right">TOTAL LATE</th>
+                {renderSortableHeader('totalFees', isEs ? 'Saldo Deuda Año' : 'OWES YEAR', 'right')}
+                <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">JAN 2026 (EXEMPT)</th>
+                <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">FEB 2026 (EXEMPT)</th>
+                <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">MAR 2026 (EXEMPT)</th>
                 {availableMonths.map(m => (
                   <React.Fragment key={m}>
-                    {renderSortableHeader(`month_${m}`, translateMonthStr(m, (lang || 'en') as Language), 'right')}
+                    {renderSortableHeader(`month_${m}`, translateMonthStr(m, (lang || 'en') as Language).toUpperCase(), 'right')}
                   </React.Fragment>
                 ))}
-                {renderSortableHeader('totalFees', isEs ? 'Saldo Total SOP' : 'Total SOP Fees', 'right')}
-                {renderSortableHeader('status', isEs ? 'Estado de Cuenta' : 'Account Status', 'center')}
               </tr>
             </thead>
             <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
               {sortedMasterRows.length === 0 ? (
                 <tr>
-                  <td colSpan={availableMonths.length + 5} className={`p-8 text-center ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                  <td colSpan={availableMonths.length + 10} className={`p-8 text-center ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                     {isEs 
                       ? 'No se encontraron registros en el Resumen Maestro. Ejecuta "Sincronizar Datos" para consolidar.' 
                       : 'No performer records found in Master Summary. Run Sync All Data to aggregate.'}
@@ -866,6 +868,18 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               ) : (
                 sortedMasterRows.map((row, idx) => {
                   const isExpanded = !!expandedMasterRows[row.performerEmail];
+                  const emailLower = row.performerEmail.toLowerCase().trim();
+                  const pObj = performers.find(p => p.email.toLowerCase().trim() === emailLower) || {
+                    id: `p_${idx}`,
+                    name: row.performerName,
+                    email: row.performerEmail,
+                    role: 'Dancer'
+                  };
+
+                  const isExcluded = exclusions.some(e => e.email.toLowerCase().trim() === emailLower);
+                  const pPayments = (payments || []).filter((pay: any) => pay.performerEmail?.toLowerCase().trim() === emailLower);
+                  const totalPaid = pPayments.reduce((sum: number, pay: any) => sum + (pay.amount || 0), 0);
+                  const netOwed = Math.max(0, row.totalFees - totalPaid);
 
                   return (
                     <React.Fragment key={idx}>
@@ -874,8 +888,10 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                           ? isExpanded ? 'bg-indigo-50/60 font-semibold' : 'hover:bg-slate-50'
                           : isExpanded ? 'bg-indigo-950/40 font-semibold' : 'hover:bg-slate-800/40'
                       }`}>
+                        {/* Chevron expand button */}
                         <td className="p-3 text-center">
                           <button
+                            type="button"
                             onClick={() => toggleMasterRow(row.performerEmail)}
                             className={`p-1.5 rounded-lg transition-colors border ${
                               isExpanded
@@ -891,7 +907,9 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                             )}
                           </button>
                         </td>
-                        <td className={`p-3 font-medium flex items-center justify-between gap-2 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+
+                        {/* PERFORMER NAME with ✏️ Pencil Edit & 👁️ Eye Inspect Icon buttons */}
+                        <td className={`p-3 font-medium flex items-center justify-between gap-2 min-w-[200px] ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                           <div className="flex items-center gap-2">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
                               isLight ? 'bg-indigo-100 border border-indigo-200 text-indigo-700' : 'bg-indigo-950 border border-indigo-700/50 text-indigo-300'
@@ -904,15 +922,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                           <div className="flex items-center gap-1 shrink-0">
                             <button
                               type="button"
-                              onClick={() => {
-                                const pObj = performers.find(p => p.email.toLowerCase().trim() === row.performerEmail.toLowerCase().trim()) || {
-                                  id: `p_${row.performerEmail}`,
-                                  name: row.performerName,
-                                  email: row.performerEmail,
-                                  role: 'Dancer'
-                                };
-                                if (onEditPerformer) onEditPerformer(pObj);
-                              }}
+                              onClick={() => onEditPerformer ? onEditPerformer(pObj) : null}
                               className={`p-1 rounded transition-colors border ${
                                 isLight
                                   ? 'bg-slate-100 hover:bg-indigo-100 border-slate-300 text-slate-600 hover:text-indigo-700'
@@ -942,57 +952,80 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                             </button>
                           </div>
                         </td>
+
+                        {/* EMAIL */}
                         <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{row.performerEmail}</td>
+
+                        {/* STATUS */}
+                        <td className="p-3 text-center font-bold">
+                          {isExcluded ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                              🛡️ Excluded
+                            </span>
+                          ) : netOwed > 0 ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                              ⚠️ Outstanding
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                              🟢 Current
+                            </span>
+                          )}
+                        </td>
+
+                        {/* TOTAL PAID */}
+                        <td className="p-3 text-right font-mono font-bold text-emerald-500">
+                          ${totalPaid.toFixed(2)}
+                        </td>
+
+                        {/* TOTAL LATE */}
+                        <td className="p-3 text-right font-mono text-slate-400">
+                          {row.totalFees > 0 ? `-$${row.totalFees.toFixed(2)}` : '-'}
+                        </td>
+
+                        {/* OWES YEAR */}
+                        <td className="p-3 text-right font-mono font-extrabold text-sm">
+                          {netOwed > 0 ? (
+                            <span className="text-rose-500">-${netOwed.toFixed(2)}</span>
+                          ) : (
+                            <span className="text-emerald-500">$0.00</span>
+                          )}
+                        </td>
+
+                        {/* JAN 2026 (EXEMPT) */}
+                        <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
+                          Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                        </td>
+
+                        {/* FEB 2026 (EXEMPT) */}
+                        <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
+                          Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                        </td>
+
+                        {/* MAR 2026 (EXEMPT) */}
+                        <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
+                          Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                        </td>
+
+                        {/* APR 2026 - DEC 2026 */}
                         {availableMonths.map(m => {
                           const fee = row.monthlyFees[m] || 0;
                           return (
                             <td key={m} className="p-3 text-right font-mono">
                               {fee > 0 ? (
-                                <span className={`font-semibold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>${fee.toFixed(2)}</span>
+                                <span className={`font-semibold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>-${fee.toFixed(0)}</span>
                               ) : (
                                 <span className={isLight ? 'text-slate-400' : 'text-slate-600'}>$0.00</span>
                               )}
                             </td>
                           );
                         })}
-                        <td className="p-3 text-right font-mono font-bold text-sm">
-                          {row.totalFees > 0 ? (
-                            <span className={`px-2.5 py-1 rounded border ${
-                              isLight ? 'text-rose-700 bg-rose-50 border-rose-200' : 'text-rose-400 bg-rose-950/60 border-rose-800/80'
-                            }`}>
-                              ${row.totalFees.toFixed(2)}
-                            </span>
-                          ) : (
-                            <span className={`px-2 py-1 rounded border ${
-                              isLight ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-emerald-400 bg-emerald-950/60 border-emerald-800/80'
-                            }`}>
-                              $0.00
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-3 text-center">
-                          {row.totalFees > 0 ? (
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
-                              isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-950/80 text-rose-300 border-rose-800'
-                            }`}>
-                              <AlertCircle className={`w-3 h-3 ${isLight ? 'text-rose-600' : 'text-rose-400'}`} />
-                              {t.outstanding}
-                            </span>
-                          ) : (
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
-                              isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                            }`}>
-                              <Check className={`w-3 h-3 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
-                              {t.paidInFull}
-                            </span>
-                          )}
-                        </td>
                       </tr>
 
                       {/* Expandable 2026 Monthly Rehearsal Schedule Cards Drawer */}
                       {isExpanded && (
                         <tr className={isLight ? 'bg-slate-50/90 border-b border-indigo-200' : 'bg-slate-950/80 border-b border-indigo-900/60'}>
-                          <td colSpan={availableMonths.length + 5} className="p-4">
+                          <td colSpan={availableMonths.length + 10} className="p-4">
                             <div className={`p-4 rounded-2xl border shadow-md transition-colors ${
                               isLight ? 'bg-white border-indigo-100' : 'bg-slate-900 border-indigo-900/50'
                             }`}>
@@ -1039,25 +1072,21 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                                       <div className="text-xs font-mono my-1 font-extrabold">
                                         {fee > 0 ? (
                                           <span className="text-rose-500 font-bold">${fee.toFixed(0)} <span className="text-[10px] font-normal text-rose-400">fee</span></span>
-                                        ) : (
-                                          <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>$0 <span className="text-[10px] text-slate-400">/ $15</span></span>
-                                        )}
-                                      </div>
-                                      <div className="mt-1">
-                                        {isOverdue ? (
-                                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30">
-                                            {isEs ? 'Recargo' : 'Overdue'}
-                                          </span>
                                         ) : isPendingMonth ? (
-                                          <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20">
-                                            {isEs ? 'Pendiente' : 'Pending'}
-                                          </span>
+                                          <span className="text-slate-400 font-normal">$0 <span className="text-[9px] text-slate-400">scheduled</span></span>
                                         ) : (
-                                          <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                                            {isEs ? 'Al Día' : 'Current'}
-                                          </span>
+                                          <span className="text-emerald-500 font-bold">$0 <span className="text-[9px] text-emerald-400">✓ clear</span></span>
                                         )}
                                       </div>
+                                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold ${
+                                        isOverdue
+                                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                          : isPendingMonth
+                                            ? 'bg-slate-800 text-slate-400'
+                                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                      }`}>
+                                        {isOverdue ? 'Penalty' : isPendingMonth ? 'Upcoming' : 'Compliant'}
+                                      </span>
                                     </div>
                                   );
                                 })}
@@ -1072,194 +1101,6 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* 2026 MASTER DUES ACCOUNTING LEDGER (Libro Mayor Contable 2026) */}
-      {(activeTab === 'Libro Mayor 2026' || activeTab === '2026 Master Accounting Ledger') && (
-        <div>
-          {/* Header Banner */}
-          <div className={`p-4 border-b flex flex-col md:flex-row md:items-center justify-between gap-3 ${
-            isLight ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200' : 'bg-gradient-to-r from-purple-950/40 to-indigo-950/40 border-purple-900/60'
-          }`}>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-purple-600 text-white shadow-md">
-                <FileSpreadsheet className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-extrabold text-sm sm:text-base tracking-tight text-purple-600 dark:text-purple-300">
-                    2026 MASTER DUES ACCOUNTING LEDGER
-                  </h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold">
-                    {performers.length || masterSummary.length} Records
-                  </span>
-                </div>
-                <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                  Live monthly breakdown with carryover balances and weekly late penalties
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Master Accounting Table Grid */}
-          <div className="overflow-x-auto">
-            <table className={`w-full text-left text-xs border-collapse ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-              <thead>
-                <tr className={`border-b uppercase font-mono text-[11px] tracking-wider transition-colors ${
-                  isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-950 text-slate-300 border-slate-800'
-                }`}>
-                  <th className="p-3">PERFORMER NAME</th>
-                  <th className="p-3">EMAIL</th>
-                  <th className="p-3 text-center">STATUS</th>
-                  <th className="p-3 text-right">TOTAL PAID</th>
-                  <th className="p-3 text-right">TOTAL LATE</th>
-                  <th className="p-3 text-right">OWES YEAR</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">JAN 2026 (EXEMPT)</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">FEB 2026 (EXEMPT)</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">MAR 2026 (EXEMPT)</th>
-                  <th className="p-3 text-right">APR 2026</th>
-                  <th className="p-3 text-right">MAY 2026</th>
-                  <th className="p-3 text-right">JUN 2026</th>
-                  <th className="p-3 text-right">JUL 2026</th>
-                  <th className="p-3 text-right">AUG 2026</th>
-                  <th className="p-3 text-right">SEP 2026</th>
-                  <th className="p-3 text-right">OCT 2026</th>
-                  <th className="p-3 text-right">NOV 2026</th>
-                  <th className="p-3 text-right">DEC 2026</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
-                {masterSummary.map((mRow, idx) => {
-                  const emailLower = mRow.performerEmail.toLowerCase().trim();
-                  const pObj = performers.find(p => p.email.toLowerCase().trim() === emailLower) || {
-                    id: `p_${idx}`,
-                    name: mRow.performerName,
-                    email: mRow.performerEmail,
-                    role: 'Dancer'
-                  };
-
-                  const isExcluded = exclusions.some(e => e.email.toLowerCase().trim() === emailLower);
-                  const pPayments = (payments || []).filter((pay: any) => pay.performerEmail?.toLowerCase().trim() === emailLower);
-                  const totalPaid = pPayments.reduce((sum: number, pay: any) => sum + (pay.amount || 0), 0);
-                  const netOwed = Math.max(0, mRow.totalFees - totalPaid);
-
-                  return (
-                    <tr key={idx} className={`transition-colors ${isLight ? 'hover:bg-purple-50/40' : 'hover:bg-slate-800/40'}`}>
-                      {/* PERFORMER NAME with ✏️ Pencil Edit & 👁️ Eye Inspect Icons */}
-                      <td className="p-3 font-bold flex items-center justify-between gap-3 min-w-[200px]">
-                        <span className={isLight ? 'text-slate-900' : 'text-slate-100'}>{mRow.performerName}</span>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* ✏️ Pencil Edit Icon */}
-                          <button
-                            type="button"
-                            onClick={() => onEditPerformer ? onEditPerformer(pObj) : null}
-                            className={`p-1.5 rounded-lg border transition-colors ${
-                              isLight
-                                ? 'bg-slate-100 hover:bg-purple-100 border-slate-300 text-slate-600 hover:text-purple-700'
-                                : 'bg-slate-900 hover:bg-purple-950 border-slate-800 text-slate-400 hover:text-purple-300'
-                            }`}
-                            title={isEs ? `✏️ Modificar datos de ${mRow.performerName}` : `✏️ Edit ${mRow.performerName}'s profile`}
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          {/* 👁️ Eye Inspect Icon */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onInspectPerformer) {
-                                onInspectPerformer(mRow.performerEmail);
-                              } else if (setActiveView) {
-                                setActiveView('performer');
-                              }
-                            }}
-                            className={`p-1.5 rounded-lg border transition-colors ${
-                              isLight
-                                ? 'bg-slate-100 hover:bg-purple-100 border-slate-300 text-slate-600 hover:text-purple-700'
-                                : 'bg-slate-900 hover:bg-purple-950 border-slate-800 text-slate-400 hover:text-purple-300'
-                            }`}
-                            title={isEs ? `👁️ Auditoría / Drill-Down de ${mRow.performerName}` : `👁️ Audit Drill-Down for ${mRow.performerName}`}
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-
-                      {/* EMAIL */}
-                      <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        {mRow.performerEmail}
-                      </td>
-
-                      {/* STATUS */}
-                      <td className="p-3 text-center font-bold">
-                        {isExcluded ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                            🛡️ Excluded
-                          </span>
-                        ) : netOwed > 0 ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                            ⚠️ Outstanding
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            🟢 Current
-                          </span>
-                        )}
-                      </td>
-
-                      {/* TOTAL PAID */}
-                      <td className="p-3 text-right font-mono font-bold text-emerald-500">
-                        ${totalPaid.toFixed(2)}
-                      </td>
-
-                      {/* TOTAL LATE */}
-                      <td className="p-3 text-right font-mono text-slate-400">
-                        {mRow.totalFees > 0 ? `-$${mRow.totalFees.toFixed(2)}` : '-'}
-                      </td>
-
-                      {/* OWES YEAR */}
-                      <td className="p-3 text-right font-mono font-extrabold text-sm">
-                        {netOwed > 0 ? (
-                          <span className="text-rose-500">-${netOwed.toFixed(2)}</span>
-                        ) : (
-                          <span className="text-emerald-500">$0.00</span>
-                        )}
-                      </td>
-
-                      {/* JAN 2026 (EXEMPT) */}
-                      <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
-                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
-                      </td>
-
-                      {/* FEB 2026 (EXEMPT) */}
-                      <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
-                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
-                      </td>
-
-                      {/* MAR 2026 (EXEMPT) */}
-                      <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
-                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
-                      </td>
-
-                      {/* APR 2026 - DEC 2026 */}
-                      {['April 2026', 'May 2026', 'June 2026', 'July 2026', 'August 2026', 'September 2026', 'October 2026', 'November 2026', 'December 2026'].map(m => {
-                        const fee = mRow.monthlyFees[m] || 0;
-                        return (
-                          <td key={m} className="p-3 text-right font-mono text-[11px]">
-                            {fee > 0 ? (
-                              <span className="text-rose-400 font-semibold">Bal: -${fee.toFixed(0)}</span>
-                            ) : (
-                              <span className="text-slate-500">Paid: $0 | Bal: $0</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 
