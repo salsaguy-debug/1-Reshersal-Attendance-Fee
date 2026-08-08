@@ -16,7 +16,9 @@ import {
   TrendingUp,
   Sparkles,
   UserX,
-  Trash2
+  Trash2,
+  Pencil,
+  Eye
 } from 'lucide-react';
 import {
   Performer,
@@ -50,6 +52,7 @@ interface PerformerDetailViewProps {
   payments?: PaymentTransaction[];
   onAddPayment?: (payment: PaymentTransaction) => void;
   onDeletePayment?: (id: string) => void;
+  onUpdatePerformer?: (oldEmail: string, updated: Performer) => void;
 }
 
 export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
@@ -63,7 +66,8 @@ export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
   onToggleExclusion,
   payments = [],
   onAddPayment,
-  onDeletePayment
+  onDeletePayment,
+  onUpdatePerformer
 }) => {
   const isLight = theme === 'light';
   const isEs = lang === 'es';
@@ -75,6 +79,38 @@ export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [directoryFilter, setDirectoryFilter] = useState<'all' | 'owed' | 'good' | 'excluded'>('all');
   const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>('ALL');
+
+  // Edit Performer Modal State
+  const [editingPerformer, setEditingPerformer] = useState<Performer | null>(null);
+  const [editName, setEditName] = useState<string>('');
+  const [editEmail, setEditEmail] = useState<string>('');
+  const [editRole, setEditRole] = useState<string>('Dancer');
+
+  const handleOpenEditPerformer = (p: Performer) => {
+    setEditingPerformer(p);
+    setEditName(p.name);
+    setEditEmail(p.email);
+    setEditRole(p.role || 'Dancer');
+  };
+
+  const handleSaveEditedPerformer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPerformer) return;
+    const oldEmail = editingPerformer.email;
+    const updated: Performer = {
+      ...editingPerformer,
+      name: editName.trim(),
+      email: editEmail.trim(),
+      role: editRole as any
+    };
+    if (onUpdatePerformer) {
+      onUpdatePerformer(oldEmail, updated);
+    }
+    if (selectedEmail.toLowerCase() === oldEmail.toLowerCase()) {
+      setSelectedEmail(updated.email);
+    }
+    setEditingPerformer(null);
+  };
 
   // Payment Recording Modal State
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
@@ -390,8 +426,8 @@ SOP Compliance Engine Rev 7.4`;
                         </div>
                       </div>
 
-                      {/* Right Balance Badge */}
-                      <div className="shrink-0 text-right">
+                      {/* Right Balance Badge & Action Icons */}
+                      <div className="shrink-0 flex items-center gap-1.5">
                         {isExcluded ? (
                           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
                             isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-slate-800 text-slate-400 border-slate-700'
@@ -415,6 +451,38 @@ SOP Compliance Engine Rev 7.4`;
                             ✓ $0
                           </span>
                         )}
+
+                        {/* Action Icons: Edit & Eye Inspect */}
+                        <div className="flex items-center gap-1 ml-1" onClick={e => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditPerformer(p)}
+                            className={`p-1.5 rounded-lg border transition-colors ${
+                              isSelected
+                                ? 'bg-white/20 hover:bg-white/30 text-white border-white/30'
+                                : isLight
+                                ? 'bg-slate-100 hover:bg-indigo-50 border-slate-300 text-slate-600 hover:text-indigo-600'
+                                : 'bg-slate-900 hover:bg-indigo-950 border-slate-800 text-slate-400 hover:text-indigo-300'
+                            }`}
+                            title={isEs ? `Editar perfil de ${p.name}` : `Edit ${p.name}'s profile`}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedEmail(p.email)}
+                            className={`p-1.5 rounded-lg border transition-colors ${
+                              isSelected
+                                ? 'bg-white/20 hover:bg-white/30 text-white border-white/30'
+                                : isLight
+                                ? 'bg-slate-100 hover:bg-indigo-50 border-slate-300 text-slate-600 hover:text-indigo-600'
+                                : 'bg-slate-900 hover:bg-indigo-950 border-slate-800 text-slate-400 hover:text-indigo-300'
+                            }`}
+                            title={isEs ? `Ver expediente de ${p.name}` : `Inspect ${p.name}'s ledger`}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </button>
                   );
@@ -1009,6 +1077,103 @@ SOP Compliance Engine Rev 7.4`;
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Edit Performer */}
+      {editingPerformer && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className={`border rounded-2xl p-6 w-full max-w-md shadow-2xl transition-colors ${
+            isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-200'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 border-b mb-4 ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
+              <h3 className={`font-bold text-base flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <Pencil className="w-5 h-5 text-indigo-500" />
+                {isEs ? `Editar Perfil — ${editingPerformer.name}` : `Edit Performer Profile — ${editingPerformer.name}`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingPerformer(null)}
+                className="text-slate-400 hover:text-slate-200 text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedPerformer} className="space-y-4 text-xs">
+              <div>
+                <label htmlFor="edit-performer-name" className={`block font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+                  {isEs ? 'Nombre Completo del Integrante' : 'Performer Full Name'}
+                </label>
+                <input
+                  id="edit-performer-name"
+                  name="editPerformerName"
+                  type="text"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className={`w-full p-2.5 rounded-xl border focus:outline-none focus:border-indigo-500 font-semibold ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-slate-100'
+                  }`}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-performer-email" className={`block font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+                  {isEs ? 'Correo Electrónico (Identificador)' : 'Performer Email (Identifier)'}
+                </label>
+                <input
+                  id="edit-performer-email"
+                  name="editPerformerEmail"
+                  type="email"
+                  value={editEmail}
+                  onChange={e => setEditEmail(e.target.value)}
+                  className={`w-full p-2.5 rounded-xl border focus:outline-none focus:border-indigo-500 font-mono ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-slate-100'
+                  }`}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-performer-role" className={`block font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+                  {isEs ? 'Rol en el Elenco' : 'Team Role'}
+                </label>
+                <select
+                  id="edit-performer-role"
+                  name="editPerformerRole"
+                  value={editRole}
+                  onChange={e => setEditRole(e.target.value)}
+                  className={`w-full p-2.5 rounded-xl border focus:outline-none focus:border-indigo-500 font-semibold ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-slate-100'
+                  }`}
+                >
+                  <option value="Dancer">{isEs ? 'Bailarín (Dancer)' : 'Dancer'}</option>
+                  <option value="Instructor">{isEs ? 'Instructor' : 'Instructor'}</option>
+                  <option value="Musician">{isEs ? 'Músico' : 'Musician'}</option>
+                  <option value="Staff">{isEs ? 'Personal / Director' : 'Staff / Director'}</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800/80">
+                <button
+                  type="button"
+                  onClick={() => setEditingPerformer(null)}
+                  className={`px-4 py-2 rounded-xl font-semibold border ${
+                    isLight ? 'bg-slate-100 border-slate-300 text-slate-700' : 'bg-slate-800 border-slate-700 text-slate-300'
+                  }`}
+                >
+                  {isEs ? 'Cancelar' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-colors shadow"
+                >
+                  {isEs ? 'Guardar Cambios' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

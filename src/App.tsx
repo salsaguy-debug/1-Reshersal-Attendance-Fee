@@ -1286,7 +1286,11 @@ export default function App() {
     excludedPerformersCount: exclusions.length
   }), [totalOutstandingBalance, totalFlaggedPenalties, performers.length, exclusions.length]);
 
-  const isLight = theme === 'light';
+  const handleUpdatePerformer = (oldEmail: string, updated: Performer) => {
+    setPerformers(prev => prev.map(p => p.email.toLowerCase().trim() === oldEmail.toLowerCase().trim() ? updated : p));
+    setRecords(prev => prev.map(r => r.performerEmail.toLowerCase().trim() === oldEmail.toLowerCase().trim() ? { ...r, performerEmail: updated.email, performerName: updated.name } : r));
+    showToast(lang === 'es' ? `Perfil de ${updated.name} actualizado correctamente.` : `Updated ${updated.name}'s performer profile.`);
+  };
 
   return (
     <div className={`min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200 ${
@@ -1558,6 +1562,7 @@ export default function App() {
             payments={payments}
             onAddPayment={pay => setPayments(prev => [pay, ...prev])}
             onDeletePayment={handleDeletePayment}
+            onUpdatePerformer={handleUpdatePerformer}
           />
         )}
 
