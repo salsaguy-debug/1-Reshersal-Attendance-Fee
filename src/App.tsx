@@ -1561,6 +1561,7 @@ export default function App() {
             formResponses={formResponses}
             exclusions={exclusions}
             performers={performers}
+            payments={payments}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             availableMonths={availableMonths}

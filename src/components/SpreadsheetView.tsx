@@ -23,7 +23,9 @@ import {
   ArrowUp,
   ArrowDown,
   RefreshCw,
-  Calendar
+  Calendar,
+  Pencil,
+  Eye
 } from 'lucide-react';
 import {
   AttendanceRecord,
@@ -43,6 +45,7 @@ interface SpreadsheetViewProps {
   exclusions: ExcludedPerformer[];
   availableMonths: string[];
   performers?: Performer[];
+  payments?: any[];
   activeTab?: string;
   setActiveTab?: (tab: string) => void;
   onUpdateRecord: (id: string, rsvp: RsvpStatus, attended: AttendedStatus) => void;
@@ -66,6 +69,8 @@ interface SpreadsheetViewProps {
   isSyncing?: boolean;
   theme?: 'dark' | 'light';
   lang?: Language;
+  onEditPerformer?: (p: Performer) => void;
+  onInspectPerformer?: (email: string) => void;
 }
 
 export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
@@ -74,20 +79,33 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   formResponses,
   exclusions,
   availableMonths,
+  performers = [],
+  payments = [],
+  activeTab: externalActiveTab,
+  setActiveTab: externalSetActiveTab,
   onUpdateRecord,
   onBatchUpdateRecords,
   onDeleteRecord,
   onCreateRecord,
+  onAddRecord,
   onAddExclusion,
   onDeleteExclusion,
   onBulkAddExclusions,
   onPurgeExclusions,
   onForceUpdateMonths,
   onRunSync,
+  onOpenLiveImport,
   onAddMonthTab,
   isSyncing = false,
+  activeView,
+  setActiveView,
+  onOpenSopRules,
+  onResetData,
+  onDeleteAllTestData,
   theme = 'dark',
-  lang = 'en'
+  lang = 'en',
+  onEditPerformer,
+  onInspectPerformer
 }) => {
   const isLight = theme === 'light';
   const isEs = lang === 'es';
@@ -97,6 +115,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   const tabs = useMemo(() => {
     return [
       'Master Summary',
+      'Libro Mayor 2026',
       ...availableMonths,
       'Form Responses 1',
       'Excluded these Performers'
@@ -1042,6 +1061,194 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* 2026 MASTER DUES ACCOUNTING LEDGER (Libro Mayor Contable 2026) */}
+      {(activeTab === 'Libro Mayor 2026' || activeTab === '2026 Master Accounting Ledger') && (
+        <div>
+          {/* Header Banner */}
+          <div className={`p-4 border-b flex flex-col md:flex-row md:items-center justify-between gap-3 ${
+            isLight ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200' : 'bg-gradient-to-r from-purple-950/40 to-indigo-950/40 border-purple-900/60'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-purple-600 text-white shadow-md">
+                <FileSpreadsheet className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-sm sm:text-base tracking-tight text-purple-600 dark:text-purple-300">
+                    2026 MASTER DUES ACCOUNTING LEDGER
+                  </h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold">
+                    {performers.length || masterSummary.length} Records
+                  </span>
+                </div>
+                <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  Live monthly breakdown with carryover balances and weekly late penalties
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Master Accounting Table Grid */}
+          <div className="overflow-x-auto">
+            <table className={`w-full text-left text-xs border-collapse ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+              <thead>
+                <tr className={`border-b uppercase font-mono text-[11px] tracking-wider transition-colors ${
+                  isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-950 text-slate-300 border-slate-800'
+                }`}>
+                  <th className="p-3">PERFORMER NAME</th>
+                  <th className="p-3">EMAIL</th>
+                  <th className="p-3 text-center">STATUS</th>
+                  <th className="p-3 text-right">TOTAL PAID</th>
+                  <th className="p-3 text-right">TOTAL LATE</th>
+                  <th className="p-3 text-right">OWES YEAR</th>
+                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">JAN 2026 (EXEMPT)</th>
+                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">FEB 2026 (EXEMPT)</th>
+                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">MAR 2026 (EXEMPT)</th>
+                  <th className="p-3 text-right">APR 2026</th>
+                  <th className="p-3 text-right">MAY 2026</th>
+                  <th className="p-3 text-right">JUN 2026</th>
+                  <th className="p-3 text-right">JUL 2026</th>
+                  <th className="p-3 text-right">AUG 2026</th>
+                  <th className="p-3 text-right">SEP 2026</th>
+                  <th className="p-3 text-right">OCT 2026</th>
+                  <th className="p-3 text-right">NOV 2026</th>
+                  <th className="p-3 text-right">DEC 2026</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
+                {masterSummary.map((mRow, idx) => {
+                  const emailLower = mRow.performerEmail.toLowerCase().trim();
+                  const pObj = performers.find(p => p.email.toLowerCase().trim() === emailLower) || {
+                    id: `p_${idx}`,
+                    name: mRow.performerName,
+                    email: mRow.performerEmail,
+                    role: 'Dancer'
+                  };
+
+                  const isExcluded = exclusions.some(e => e.email.toLowerCase().trim() === emailLower);
+                  const pPayments = (payments || []).filter((pay: any) => pay.performerEmail?.toLowerCase().trim() === emailLower);
+                  const totalPaid = pPayments.reduce((sum: number, pay: any) => sum + (pay.amount || 0), 0);
+                  const netOwed = Math.max(0, mRow.totalFees - totalPaid);
+
+                  return (
+                    <tr key={idx} className={`transition-colors ${isLight ? 'hover:bg-purple-50/40' : 'hover:bg-slate-800/40'}`}>
+                      {/* PERFORMER NAME with ✏️ Pencil Edit & 👁️ Eye Inspect Icons */}
+                      <td className="p-3 font-bold flex items-center justify-between gap-3 min-w-[200px]">
+                        <span className={isLight ? 'text-slate-900' : 'text-slate-100'}>{mRow.performerName}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* ✏️ Pencil Edit Icon */}
+                          <button
+                            type="button"
+                            onClick={() => onEditPerformer ? onEditPerformer(pObj) : null}
+                            className={`p-1.5 rounded-lg border transition-colors ${
+                              isLight
+                                ? 'bg-slate-100 hover:bg-purple-100 border-slate-300 text-slate-600 hover:text-purple-700'
+                                : 'bg-slate-900 hover:bg-purple-950 border-slate-800 text-slate-400 hover:text-purple-300'
+                            }`}
+                            title={isEs ? `✏️ Modificar datos de ${mRow.performerName}` : `✏️ Edit ${mRow.performerName}'s profile`}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          {/* 👁️ Eye Inspect Icon */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onInspectPerformer) {
+                                onInspectPerformer(mRow.performerEmail);
+                              } else if (setActiveView) {
+                                setActiveView('performer');
+                              }
+                            }}
+                            className={`p-1.5 rounded-lg border transition-colors ${
+                              isLight
+                                ? 'bg-slate-100 hover:bg-purple-100 border-slate-300 text-slate-600 hover:text-purple-700'
+                                : 'bg-slate-900 hover:bg-purple-950 border-slate-800 text-slate-400 hover:text-purple-300'
+                            }`}
+                            title={isEs ? `👁️ Auditoría / Drill-Down de ${mRow.performerName}` : `👁️ Audit Drill-Down for ${mRow.performerName}`}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* EMAIL */}
+                      <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {mRow.performerEmail}
+                      </td>
+
+                      {/* STATUS */}
+                      <td className="p-3 text-center font-bold">
+                        {isExcluded ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                            🛡️ Excluded
+                          </span>
+                        ) : netOwed > 0 ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                            ⚠️ Outstanding
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            🟢 Current
+                          </span>
+                        )}
+                      </td>
+
+                      {/* TOTAL PAID */}
+                      <td className="p-3 text-right font-mono font-bold text-emerald-500">
+                        ${totalPaid.toFixed(2)}
+                      </td>
+
+                      {/* TOTAL LATE */}
+                      <td className="p-3 text-right font-mono text-slate-400">
+                        {mRow.totalFees > 0 ? `-$${mRow.totalFees.toFixed(2)}` : '-'}
+                      </td>
+
+                      {/* OWES YEAR */}
+                      <td className="p-3 text-right font-mono font-extrabold text-sm">
+                        {netOwed > 0 ? (
+                          <span className="text-rose-500">-${netOwed.toFixed(2)}</span>
+                        ) : (
+                          <span className="text-emerald-500">$0.00</span>
+                        )}
+                      </td>
+
+                      {/* JAN 2026 (EXEMPT) */}
+                      <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
+                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                      </td>
+
+                      {/* FEB 2026 (EXEMPT) */}
+                      <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
+                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                      </td>
+
+                      {/* MAR 2026 (EXEMPT) */}
+                      <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
+                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                      </td>
+
+                      {/* APR 2026 - DEC 2026 */}
+                      {['April 2026', 'May 2026', 'June 2026', 'July 2026', 'August 2026', 'September 2026', 'October 2026', 'November 2026', 'December 2026'].map(m => {
+                        const fee = mRow.monthlyFees[m] || 0;
+                        return (
+                          <td key={m} className="p-3 text-right font-mono text-[11px]">
+                            {fee > 0 ? (
+                              <span className="text-rose-400 font-semibold">Bal: -${fee.toFixed(0)}</span>
+                            ) : (
+                              <span className="text-slate-500">Paid: $0 | Bal: $0</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
