@@ -572,7 +572,12 @@ export default function App() {
     const a = String(attended || '').trim().toLowerCase();
     const isAttended = a === 'yes' || a === 'present' || a === '1' || a === 'true';
 
-    // 5. Unconfirmed Status ($5) -> RSVP = Awaiting / Maybe (for past/current dates)
+    // Exempt / Not Called / Not Invited -> $0 fee when absent
+    if ((r === 'exempt' || r === 'not called' || r === 'uninvited' || r === 'off' || r === 'no' || r === 'excused') && !isAttended) {
+      return config.feeRules.excusedFee ?? 0;
+    }
+
+    // 5. Unconfirmed Status ($5) -> RSVP = Awaiting / Maybe (for invited performers on past/current dates)
     if (r === 'awaiting' || r === 'maybe' || r === 'tentative' || r === 'unconfirmed' || r === '') {
       return config.feeRules.unconfirmedFee ?? 5;
     }
@@ -588,13 +593,8 @@ export default function App() {
     }
 
     // 4. Unannounced Attendance ($5) -> RSVP = No & Attended = Yes
-    if ((r === 'no' || r === 'excused') && isAttended) {
+    if ((r === 'no' || r === 'excused' || r === 'exempt' || r === 'not called') && isAttended) {
       return config.feeRules.unannouncedFee ?? 5;
-    }
-
-    // 2. Excused Absence ($0) -> RSVP = No & Attended = No
-    if ((r === 'no' || r === 'excused') && !isAttended) {
-      return config.feeRules.excusedFee ?? 0;
     }
 
     return config.feeRules.unconfirmedFee ?? 5;
@@ -610,6 +610,9 @@ export default function App() {
     const a = String(attended || '').trim().toLowerCase();
     const isAttended = a === 'yes' || a === 'present' || a === '1' || a === 'true';
 
+    if (r === 'exempt' || r === 'not called' || r === 'uninvited' || r === 'off') {
+      return 'Not Called / Exempt ($0)';
+    }
     if (r === 'awaiting' || r === 'maybe' || r === 'tentative' || r === 'unconfirmed' || r === '') {
       return 'Unconfirmed Status ($5 Penalty)';
     }

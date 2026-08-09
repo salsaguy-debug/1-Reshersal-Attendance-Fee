@@ -257,15 +257,18 @@ export function populateMissingRehearsalDates(
       dayOfWeek = 'Mon';
     }
 
+    const hasAttendeeList = evt.attendees && evt.attendees.length > 0;
+
     performers.forEach(p => {
       const key = `${eventDate}_${p.email.toLowerCase().trim()}`;
       const calRsvp = attendeeRsvpMap.get(p.email.toLowerCase().trim());
       const existing = recordMap.get(key);
       const isFuture = eventDate > todayStr;
+      const isInvited = !hasAttendeeList || attendeeRsvpMap.has(p.email.toLowerCase().trim());
 
       if (!existing) {
-        const rsvpVal = calRsvp || 'Awaiting';
-        const feeVal = isFuture ? 0 : (rsvpVal === 'Yes' ? (feeRules.noShowPenalty ?? 5) : (feeRules.unconfirmedFee ?? 5));
+        const rsvpVal = isInvited ? (calRsvp || 'Awaiting') : 'No';
+        const feeVal = (isFuture || !isInvited) ? 0 : (rsvpVal === 'Yes' ? (feeRules.noShowPenalty ?? 5) : (feeRules.unconfirmedFee ?? 5));
         recordMap.set(key, {
           id: `gcal_rec_${eventDate}_${p.id}_${Math.random().toString(36).substring(2, 6)}`,
           date: eventDate,
@@ -275,14 +278,14 @@ export function populateMissingRehearsalDates(
           rsvp: rsvpVal,
           attended: 'No',
           fees: feeVal,
-          notes: isFuture 
-            ? `Future scheduled practice session (${eventDate})`
-            : (calRsvp ? `Auto-populated from Google Calendar (RSVP: ${calRsvp})` : `Practice record (${eventDate})`),
+          notes: !isInvited 
+            ? `Not Called / Exempt for this practice (${eventDate})`
+            : (isFuture ? `Future scheduled practice session (${eventDate})` : (calRsvp ? `Auto-populated from Google Calendar (RSVP: ${calRsvp})` : `Practice record (${eventDate})`)),
           monthKey
         });
         addedCount++;
       } else if (calRsvp && calRsvp !== existing.rsvp) {
-        const feeVal = isFuture ? 0 : existing.fees;
+        const feeVal = (isFuture || !isInvited) ? 0 : existing.fees;
         recordMap.set(key, {
           ...existing,
           rsvp: calRsvp,
