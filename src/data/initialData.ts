@@ -37,7 +37,22 @@ export const INITIAL_CONFIG: SystemConfig = {
   ]
 };
 
-export const INITIAL_PERFORMERS: Performer[] = [];
+export const INITIAL_PERFORMERS: Performer[] = [
+  { id: 'p_1', name: 'Victoria E Rodriguez', email: 'vibtg18@gmail.com', role: 'Dancer' },
+  { id: 'p_2', name: 'Paola Gonzalez', email: 'paolamgonzalez21@gmail.com', role: 'Dancer' },
+  { id: 'p_3', name: 'Nohely Gonzales Ly', email: 'nohelytradiciones@gmail.com', role: 'Dancer' },
+  { id: 'p_4', name: 'Mirelys Corsoro', email: 'ms.mirelys.m@gmail.com', role: 'Dancer' },
+  { id: 'p_5', name: 'Magdiel', email: 'miranda.magdiel@gmail.com', role: 'Dancer' },
+  { id: 'p_6', name: 'Meyboll Menard', email: 'meybollmg@gmail.com', role: 'Dancer' },
+  { id: 'p_7', name: 'Luis Mario Febres', email: 'luismariofebres@gmail.com', role: 'Dancer' },
+  { id: 'p_8', name: 'Laura María Puentes Luna', email: 'laurapuentesluna@gmail.com', role: 'Dancer' },
+  { id: 'p_9', name: 'Kristen Holmes', email: 'kristencholmes@gmail.com', role: 'Dancer' },
+  { id: 'p_10', name: 'Josey Miranda', email: 'jleemiranda531@gmail.com', role: 'Dancer' },
+  { id: 'p_11', name: 'Jose Rivera-Bobea', email: 'jebprsj@gmail.com', role: 'Dancer' },
+  { id: 'p_12', name: 'Ingrid Plata Williams', email: 'ingridplata640@gmail.com', role: 'Dancer' },
+  { id: 'p_13', name: 'Aron Jimenez', email: 'huneco27@gmail.com', role: 'Dancer' },
+  { id: 'p_14', name: 'Alexandra Gomez', email: 'adevalle12@gmail.com', role: 'Dancer' }
+];
 
 export const INITIAL_PRACTICE_EVENTS: PracticeEvent[] = [];
 

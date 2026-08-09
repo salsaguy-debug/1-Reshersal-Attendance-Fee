@@ -35,8 +35,7 @@ let sharedDbState: SharedDatabase = {
 const legacySaturdayDates = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
 const sanitizeRecords = (recs: any[]) => {
   if (!Array.isArray(recs)) return [];
-  const todayStr = new Date().toISOString().split('T')[0];
-  return recs.filter(r => !r.date || (!legacySaturdayDates.has(r.date) && r.date <= todayStr));
+  return recs.filter(r => !r.date || !legacySaturdayDates.has(r.date));
 };
 
 const DEFAULT_SERVER_CONFIG = {
