@@ -115,12 +115,12 @@ export function populateMissingRehearsalDates(
   const todayStr = currentDateStr || new Date().toISOString().split('T')[0];
 
   if (!calendarEvents || calendarEvents.length === 0 || !performers || performers.length === 0) {
-    return { updatedRecords: existingRecords.filter(r => isRehearsalDay(r.date, r.day) && r.date <= todayStr), addedCount: 0 };
+    return { updatedRecords: existingRecords.filter(r => isRehearsalDay(r.date, r.day)), addedCount: 0 };
   }
 
   const recordMap = new Map<string, AttendanceRecord>();
   existingRecords
-    .filter(r => isRehearsalDay(r.date, r.day) && r.date <= todayStr)
+    .filter(r => isRehearsalDay(r.date, r.day))
     .forEach(r => {
       const normDate = normalizeDateString(r.date);
       const emailLower = (r.performerEmail || '').toLowerCase().trim();
@@ -150,8 +150,8 @@ export function populateMissingRehearsalDates(
 
   calendarEvents.forEach(evt => {
     const eventDate = normalizeDateString(evt.date);
-    // Ignore events before baselineDate, non-rehearsal days, OR events in the FUTURE (> todayStr)
-    if (!eventDate || eventDate < baselineDate || eventDate > todayStr || !isRehearsalDay(eventDate)) return;
+    // Ignore events before baselineDate or non-rehearsal days
+    if (!eventDate || eventDate < baselineDate || !isRehearsalDay(eventDate)) return;
 
     // Build map of attendee email -> RSVP status from Google Calendar event if available
     const attendeeRsvpMap = new Map<string, 'Yes' | 'No' | 'Maybe' | 'Awaiting'>();

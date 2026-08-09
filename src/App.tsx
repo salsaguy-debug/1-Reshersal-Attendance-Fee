@@ -307,8 +307,7 @@ export default function App() {
             if (sData.config) setConfig(sData.config);
             if (Array.isArray(sData.records) && sData.records.length > 0) {
               const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
-              const todayStr = new Date().toISOString().split('T')[0];
-              setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date) && r.date <= todayStr));
+              setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date)));
             }
             if (Array.isArray(sData.formResponses) && sData.formResponses.length > 0) setFormResponses(sData.formResponses);
             if (Array.isArray(sData.exclusions) && sData.exclusions.length > 0) setExclusions(sData.exclusions);
@@ -454,10 +453,9 @@ export default function App() {
                 const sData = dataJson.data;
                 isRemoteUpdating.current = true;
                 if (sData.config) setConfig(sData.config);
-                if (Array.isArray(sData.records)) {
+                if (Array.isArray(sData.records) && sData.records.length > 0) {
                   const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
-                  const todayStr = new Date().toISOString().split('T')[0];
-                  setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date) && r.date <= todayStr));
+                  setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date)));
                 }
                 if (Array.isArray(sData.formResponses)) setFormResponses(sData.formResponses);
                 if (Array.isArray(sData.exclusions)) setExclusions(sData.exclusions);
@@ -894,7 +892,6 @@ export default function App() {
       const updated = Array.from(recordMap.values())
         .filter(r => !excludedEmails.has(r.performerEmail.toLowerCase().trim()))
         .filter(r => !legacySaturdayDates.has(r.date))
-        .filter(r => r.date <= todayStr)
         .map(r => {
           const fee = calculateSopFee(r.rsvp, r.attended);
           const emailLower = r.performerEmail.toLowerCase().trim();
