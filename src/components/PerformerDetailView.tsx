@@ -1058,33 +1058,81 @@ SOP Compliance Engine Rev 7.4`;
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <a
-                  href={`mailto:${currentPerformer.email}?subject=${encodeURIComponent(`Tradición Dance Co. Statement - ${currentPerformer.name}`)}&body=${encodeURIComponent(emailStatementText)}`}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow"
-                >
-                  <Send className="w-4 h-4" />
-                  {isEs ? 'Abrir App de Correo (Mailto)' : 'Open in Mail App'}
-                </a>
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Option 1: Open directly in Gmail Web (100% Reliable everywhere) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try { navigator.clipboard.writeText(emailStatementText); } catch {}
+                      const subject = `Tradición Dance Co. Statement - ${currentPerformer.name}`;
+                      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(currentPerformer.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailStatementText)}`;
+                      window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+                    }}
+                    className="px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow text-xs"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Gmail Web</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(emailStatementText);
-                    setEmailCopied(true);
-                    setTimeout(() => setEmailCopied(false), 2000);
-                  }}
-                  className={`px-4 py-2 rounded-xl font-semibold border flex items-center gap-1.5 transition-colors ${
-                    emailCopied
-                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                      : isLight
-                      ? 'bg-slate-100 border-slate-300 text-slate-700'
-                      : 'bg-slate-800 border-slate-700 text-slate-300'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
-                  {emailCopied ? (isEs ? '¡Copiado!' : 'Copied!') : (isEs ? 'Copiar Texto' : 'Copy Text')}
-                </button>
+                  {/* Option 2: Open in Desktop Mail App (Mailto) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try { navigator.clipboard.writeText(emailStatementText); } catch {}
+                      const subject = `Tradición Dance Co. Statement - ${currentPerformer.name}`;
+                      const encBody = encodeURIComponent(emailStatementText);
+                      // Truncate mailto URL if > 1800 chars to avoid OS drop
+                      const mailtoUrl = encBody.length > 1500
+                        ? `mailto:${currentPerformer.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailStatementText.substring(0, 1200) + '\n\n[Full statement copied to clipboard!]')}`
+                        : `mailto:${currentPerformer.email}?subject=${encodeURIComponent(subject)}&body=${encBody}`;
+                      window.location.href = mailtoUrl;
+                    }}
+                    className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow text-xs"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isEs ? 'App de Correo (Mailto)' : 'Mail App'}</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  {/* Option 3: Open in Outlook Web */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try { navigator.clipboard.writeText(emailStatementText); } catch {}
+                      const subject = `Tradición Dance Co. Statement - ${currentPerformer.name}`;
+                      const outlookUrl = `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(currentPerformer.email)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailStatementText)}`;
+                      window.open(outlookUrl, '_blank', 'noopener,noreferrer');
+                    }}
+                    className={`px-3 py-2 rounded-xl font-bold border flex items-center gap-1.5 transition-colors text-xs ${
+                      isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Outlook Web</span>
+                  </button>
+
+                  {/* Option 4: Copy Statement */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(emailStatementText);
+                      setEmailCopied(true);
+                      setTimeout(() => setEmailCopied(false), 2000);
+                    }}
+                    className={`px-3 py-2 rounded-xl font-bold border flex items-center gap-1.5 transition-colors text-xs ${
+                      emailCopied
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                        : isLight
+                        ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                        : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{emailCopied ? (isEs ? '¡Copiado!' : 'Copied!') : (isEs ? 'Copiar Texto' : 'Copy Text')}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -450,14 +450,37 @@ For hardship review or payment arrangements, reply directly to this notice or co
                       {isEs ? 'Notificación Formal de Cobro (Demand Letter)' : 'Generated Official Demand Notice'}
                     </label>
 
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={`mailto:${activeSummary.performer.email}?subject=${encodeURIComponent(`OFFICIAL NOTICE: Rehearsal Dues Settlement - ${activeSummary.performer.name}`)}&body=${encodeURIComponent(noticeText)}`}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try { navigator.clipboard.writeText(noticeText); } catch {}
+                          const subject = `OFFICIAL NOTICE: Rehearsal Dues Settlement - ${activeSummary.performer.name}`;
+                          const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(activeSummary.performer.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(noticeText)}`;
+                          window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+                        }}
+                        className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors shadow"
+                      >
+                        <Send className="w-3 h-3" />
+                        <span>Gmail Web</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try { navigator.clipboard.writeText(noticeText); } catch {}
+                          const subject = `OFFICIAL NOTICE: Rehearsal Dues Settlement - ${activeSummary.performer.name}`;
+                          const encBody = encodeURIComponent(noticeText);
+                          const mailtoUrl = encBody.length > 1500
+                            ? `mailto:${activeSummary.performer.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(noticeText.substring(0, 1200) + '\n\n[Full notice copied to clipboard!]')}`
+                            : `mailto:${activeSummary.performer.email}?subject=${encodeURIComponent(subject)}&body=${encBody}`;
+                          window.location.href = mailtoUrl;
+                        }}
                         className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors shadow"
                       >
                         <Send className="w-3 h-3" />
-                        {isEs ? 'Enviar Correo' : 'Send Demand Email'}
-                      </a>
+                        <span>Mail App</span>
+                      </button>
 
                       <button
                         type="button"
