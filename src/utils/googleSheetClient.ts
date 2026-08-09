@@ -49,6 +49,32 @@ export async function fetchLiveGoogleSheetData(
           }
         }
 
+        const col4Str = (cols[4] || '').trim().toLowerCase();
+        const col5Str = (cols[5] || '').trim().toLowerCase();
+
+        let checkInStatus: 'Yes' | 'No' = 'Yes';
+        let rsvpStatus: 'Yes' | 'No' | 'Maybe' | 'Awaiting' = 'Yes';
+
+        if (col4Str.includes('no-show') || col4Str.includes('missed') || col5Str.includes('no-show') || col5Str.includes('missed')) {
+          rsvpStatus = 'Yes';
+          checkInStatus = 'No';
+        } else if (col4Str.includes('unannounced') || col5Str.includes('unannounced')) {
+          rsvpStatus = 'No';
+          checkInStatus = 'Yes';
+        } else if (col4Str.includes('excused') || col4Str === 'no' || col5Str.includes('excused') || col5Str === 'no') {
+          rsvpStatus = 'No';
+          checkInStatus = (col5Str.includes('yes') || col5Str.includes('present')) ? 'Yes' : 'No';
+        } else if (col4Str.includes('maybe') || col4Str.includes('tentative') || col5Str.includes('maybe')) {
+          rsvpStatus = 'Maybe';
+          checkInStatus = (col5Str.includes('yes') || col5Str.includes('present')) ? 'Yes' : 'No';
+        } else if (col4Str.includes('awaiting') || col4Str.includes('pending') || col5Str.includes('awaiting')) {
+          rsvpStatus = 'Awaiting';
+          checkInStatus = (col5Str.includes('yes') || col5Str.includes('present')) ? 'Yes' : 'No';
+        } else if (col4Str.includes('yes') || col4Str.includes('confirmed') || col4Str.includes('present')) {
+          rsvpStatus = 'Yes';
+          checkInStatus = (col5Str.includes('no') || col5Str.includes('absent')) ? 'No' : 'Yes';
+        }
+
         if (performerEmail && performerEmail.includes('@')) {
           responses.push({
             id: `fr_live_${i}`,
@@ -56,9 +82,9 @@ export async function fetchLiveGoogleSheetData(
             performerEmail: performerEmail.trim().toLowerCase(),
             performerName: performerName.trim() || performerEmail.split('@')[0],
             practiceDate,
-            checkInStatus: 'Yes',
-            rsvpStatus: 'Yes',
-            notes: attendingNotes
+            checkInStatus,
+            rsvpStatus,
+            notes: attendingNotes || `Form check-in (RSVP: ${rsvpStatus}, Attended: ${checkInStatus})`
           });
         }
       }
