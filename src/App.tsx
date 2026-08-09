@@ -557,28 +557,38 @@ export default function App() {
     });
   };
 
-  // Fee calculation engine matching SOP BTG REV 7.4
+  // Fee calculation engine matching exact SOP BTG REV 7.4 rules from system manual
   const calculateSopFee = (rsvp: RsvpStatus | string, attended: AttendedStatus | string): number => {
     const r = String(rsvp || '').trim().toLowerCase();
     const a = String(attended || '').trim().toLowerCase();
     const isAttended = a === 'yes' || a === 'present' || a === '1' || a === 'true';
 
-    // 1. Physical Attendance = Yes (Present at practice)
-    if (isAttended) {
-      if (r === 'no' || r === 'excused') {
-        return config.feeRules.unannouncedFee ?? 5; // $5 for showing up after RSVPing No
-      }
-      return config.feeRules.verifiedFee ?? 0; // $0 for Present (RSVP Yes or Awaiting/Checked-in)
+    // 5. Unconfirmed Status ($5) -> RSVP = Awaiting / Maybe
+    if (r === 'awaiting' || r === 'maybe' || r === 'tentative' || r === 'unconfirmed' || r === '') {
+      return config.feeRules.unconfirmedFee ?? 5;
     }
 
-    // 2. Physical Attendance = No (Absent from practice)
-    if (r === 'no' || r === 'excused') {
-      return config.feeRules.excusedFee ?? 0; // $0 for Excused Absence (RSVP No)
+    // 1. Verified Present ($0) -> RSVP = Yes & Attended = Yes
+    if ((r === 'yes' || r === 'confirmed') && isAttended) {
+      return config.feeRules.verifiedFee ?? 0;
     }
-    if (r === 'yes' || r === 'confirmed') {
-      return config.feeRules.noShowPenalty ?? 5; // $5 for No-Show (RSVP Yes but absent)
+
+    // 3. No-Show Penalty ($5) -> RSVP = Yes & Attended = No
+    if ((r === 'yes' || r === 'confirmed') && !isAttended) {
+      return config.feeRules.noShowPenalty ?? 5;
     }
-    return config.feeRules.unconfirmedFee ?? 5; // $5 for Unconfirmed Absence (Awaiting RSVP & absent)
+
+    // 4. Unannounced Attendance ($5) -> RSVP = No & Attended = Yes
+    if ((r === 'no' || r === 'excused') && isAttended) {
+      return config.feeRules.unannouncedFee ?? 5;
+    }
+
+    // 2. Excused Absence ($0) -> RSVP = No & Attended = No
+    if ((r === 'no' || r === 'excused') && !isAttended) {
+      return config.feeRules.excusedFee ?? 0;
+    }
+
+    return config.feeRules.unconfirmedFee ?? 5;
   };
 
   const getFeeNote = (rsvp: RsvpStatus | string, attended: AttendedStatus | string, fee: number): string => {
@@ -586,24 +596,22 @@ export default function App() {
     const a = String(attended || '').trim().toLowerCase();
     const isAttended = a === 'yes' || a === 'present' || a === '1' || a === 'true';
 
-    if (isAttended) {
-      if (r === 'no' || r === 'excused') return 'Unannounced Attendance ($5 Penalty)';
+    if (r === 'awaiting' || r === 'maybe' || r === 'tentative' || r === 'unconfirmed' || r === '') {
+      return 'Unconfirmed Status ($5 Penalty)';
+    }
+    if ((r === 'yes' || r === 'confirmed') && isAttended) {
       return 'Verified Present ($0)';
     }
-
-    if ((r === 'no' || r === 'excused') && isAttended) {
-      return `Unannounced Attendance penalty (RSVP No but Attended = $${fee})`;
-    }
-
     if ((r === 'yes' || r === 'confirmed') && !isAttended) {
-      return `No-show penalty (RSVP Yes but Attended No = $${fee})`;
+      return 'No-Show Penalty ($5 Penalty)';
     }
-
-    if (r === 'awaiting' || r === 'maybe' || r === 'tentative' || r === 'unconfirmed' || r === '') {
-      return `Unconfirmed status penalty (RSVP: ${rsvp || 'Awaiting'} = $${fee})`;
+    if ((r === 'no' || r === 'excused') && isAttended) {
+      return 'Unannounced Attendance ($5 Penalty)';
     }
-
-    return `Unconfirmed status penalty ($${fee})`;
+    if ((r === 'no' || r === 'excused') && !isAttended) {
+      return 'Excused Absence ($0)';
+    }
+    return 'Unconfirmed Status ($5 Penalty)';
   };
 
   // Rebuild Master Summary
