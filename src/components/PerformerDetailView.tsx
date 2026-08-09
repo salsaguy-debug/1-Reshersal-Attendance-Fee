@@ -703,43 +703,43 @@ SOP Compliance Engine Rev 7.4`;
                   <table className={`w-full text-left text-xs border-collapse ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
                     <thead>
                       <tr className={`border-b uppercase font-mono text-[11px] tracking-wider transition-colors ${
-                        isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-950 text-slate-400 border-slate-800'
+                        isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-950 text-slate-300 border-slate-800'
                       }`}>
-                        <th className="p-3">Fecha & Mes</th>
-                        <th className="p-3">{isEs ? 'Día' : 'Day'}</th>
-                        <th className="p-3">Estado RSVP (Form)</th>
-                        <th className="p-3">Asistencia Física</th>
-                        <th className="p-3 text-right">Tarifa SOP ($)</th>
-                        <th className="p-3">Motivo / Regla SOP</th>
-                        <th className="p-3 text-center">Estado</th>
+                        <th className="p-3 w-10 text-center">#</th>
+                        <th className="p-3">{isEs ? 'Fecha de Ensayo y Día' : 'Practice Date & Day'}</th>
+                        <th className="p-3">{isEs ? 'Respuesta RSVP Calendar' : 'Calendar RSVP Response'}</th>
+                        <th className="p-3">{isEs ? 'Asistencia Física' : 'Physical Attendance'}</th>
+                        <th className="p-3 text-right">{isEs ? 'Estado Tarifa SOP ($)' : 'SOP Fee Status'}</th>
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
                       {selectedPerformerRecords.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className={`p-8 text-center text-xs ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                          <td colSpan={5} className={`p-8 text-center text-xs ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                             {isEs
                               ? 'No hay registros de ensayos registrados para este integrante en el mes seleccionado.'
                               : 'No rehearsal records found for this performer in the selected period.'}
                           </td>
                         </tr>
                       ) : (
-                        selectedPerformerRecords.map(rec => (
+                        selectedPerformerRecords.map((rec, idx) => (
                           <tr key={rec.id} className={`transition-colors ${
                             rec.fees > 0
                               ? isLight ? 'bg-amber-50/40 hover:bg-amber-50/80' : 'bg-amber-950/20 hover:bg-amber-950/40'
                               : isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-800/40'
                           }`}>
-                            {/* Date & Month */}
+                            {/* Column 1: # */}
+                            <td className={`p-3 text-center font-mono font-bold text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {idx + 1}
+                            </td>
+
+                            {/* Column 2: Practice Date & Day */}
                             <td className={`p-3 font-mono font-extrabold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                              {rec.date}
+                              {rec.date} ({rec.day})
                               <span className={`text-[10px] block font-semibold ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{rec.monthKey}</span>
                             </td>
 
-                            {/* Day */}
-                            <td className={`p-3 font-mono font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{rec.day}</td>
-
-                            {/* RSVP Status dropdown */}
+                            {/* Column 3: Calendar RSVP Response */}
                             <td className="p-3">
                               {onUpdateRecord ? (
                                 <select
@@ -757,17 +757,17 @@ SOP Compliance Engine Rev 7.4`;
                                       : isLight ? 'bg-slate-900 text-white border-slate-950 font-extrabold shadow-md' : 'bg-slate-900 text-slate-300 border-slate-700'
                                   }`}
                                 >
-                                  <option value="Yes">✓ Yes (Confirmed)</option>
-                                  <option value="No">ℹ No (Excused)</option>
-                                  <option value="Maybe">? Maybe (Tentative)</option>
-                                  <option value="Awaiting">⧖ Awaiting (Pending)</option>
+                                  <option value="Yes">✓ Yes ({isEs ? 'Confirmado' : 'Confirmed'})</option>
+                                  <option value="No">ℹ No ({isEs ? 'Justificado' : 'Excused'})</option>
+                                  <option value="Maybe">? Maybe ({isEs ? 'Tal vez' : 'Tentative'})</option>
+                                  <option value="Awaiting">⧖ Awaiting ({isEs ? 'Pendiente' : 'Pending'})</option>
                                 </select>
                               ) : (
                                 <span className={`font-extrabold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{rec.rsvp}</span>
                               )}
                             </td>
 
-                            {/* Physical Attendance dropdown */}
+                            {/* Column 4: Physical Attendance */}
                             <td className="p-3">
                               {onUpdateRecord ? (
                                 <select
@@ -781,47 +781,27 @@ SOP Compliance Engine Rev 7.4`;
                                       : isLight ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-rose-900/80 text-rose-200 border-rose-600'
                                   }`}
                                 >
-                                  <option value="Yes">✓ Yes (Present)</option>
-                                  <option value="No">⚠ No (Absent)</option>
+                                  <option value="Yes">✓ {isEs ? 'Sí (Presente)' : 'Yes (Present)'}</option>
+                                  <option value="No">⚠ {isEs ? 'No (Ausente)' : 'No (Absent)'}</option>
                                 </select>
                               ) : (
                                 <span className={`font-extrabold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{rec.attended}</span>
                               )}
                             </td>
 
-                            {/* SOP Fee Amount */}
-                            <td className={`p-3 font-mono font-black text-right text-xs ${
-                              rec.fees > 0 
-                                ? (isLight ? 'text-rose-700 font-extrabold' : 'text-rose-400 font-extrabold') 
-                                : (isLight ? 'text-emerald-700 font-extrabold' : 'text-emerald-400 font-extrabold')
-                            }`}>
-                              ${rec.fees.toFixed(2)}
-                            </td>
-
-                            {/* Rule / Reason */}
-                            <td className={`p-3 text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-                              {rec.notes || (rec.fees > 0 ? 'SOP Penalty Fee' : 'Verified Attendance')}
-                            </td>
-
-                            {/* Status Badge */}
-                            <td className="p-3 text-center">
-                              {currentSummary.isExcluded ? (
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                  isLight ? 'bg-slate-200 text-slate-700 border border-slate-300' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            {/* Column 5: SOP Fee Status */}
+                            <td className="p-3 text-right font-mono font-bold text-xs">
+                              {rec.fees > 0 ? (
+                                <span className={`px-2.5 py-1 rounded inline-flex items-center gap-1 border font-extrabold ${
+                                  isLight ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-rose-950/80 text-rose-400 border-rose-800'
                                 }`}>
-                                  🛡️ Excluded
-                                </span>
-                              ) : rec.fees > 0 ? (
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                  isLight ? 'bg-rose-100 text-rose-900 border border-rose-300' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                                }`}>
-                                  ! Due ($5)
+                                  ${rec.fees.toFixed(2)} Penalty
                                 </span>
                               ) : (
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                  isLight ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                <span className={`px-2.5 py-1 rounded inline-flex items-center gap-1 border font-extrabold ${
+                                  isLight ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-emerald-950/80 text-emerald-400 border-emerald-800'
                                 }`}>
-                                  ✓ Clear
+                                  $0.00
                                 </span>
                               )}
                             </td>
