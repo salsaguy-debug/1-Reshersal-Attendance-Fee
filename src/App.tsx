@@ -70,6 +70,7 @@ import { MoreActionsDropdown } from './components/MoreActionsDropdown';
 import { SyncSummaryModal, SyncStats } from './components/SyncSummaryModal';
 import { CalculatorWidget } from './components/CalculatorWidget';
 import { DebtCollectionModal } from './components/DebtCollectionModal';
+import { CalendarModal } from './components/CalendarModal';
 import { fetchLiveGoogleSheetData } from './utils/googleSheetClient';
 
 export default function App() {
@@ -101,6 +102,7 @@ export default function App() {
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
   const [showDebtCollectionModal, setShowDebtCollectionModal] = useState<boolean>(false);
+  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
   const [syncStats, setSyncStats] = useState<SyncStats | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -1660,6 +1662,7 @@ export default function App() {
               onOpenSopRules={() => setShowSopModal(true)}
               onOpenCalculator={() => setShowCalculator(true)}
               onOpenDebtCollection={() => setShowDebtCollectionModal(true)}
+              onOpenCalendarModal={() => setShowCalendarModal(true)}
               stats={kpiStats}
               theme={theme}
               lang={lang}
@@ -1934,6 +1937,15 @@ export default function App() {
         onClose={() => setShowCalculator(false)}
         performers={performers}
         records={records}
+        theme={theme}
+        lang={lang}
+      />
+
+      {/* Embedded Live Google Calendar Popup Modal */}
+      <CalendarModal
+        isOpen={showCalendarModal}
+        onClose={() => setShowCalendarModal(false)}
+        calendarId={config.calendarId || DEFAULT_CALENDAR_ID}
         theme={theme}
         lang={lang}
       />

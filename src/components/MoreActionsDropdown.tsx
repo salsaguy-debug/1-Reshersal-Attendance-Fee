@@ -44,6 +44,7 @@ interface MoreActionsDropdownProps {
   onBulkImportCsv?: () => void;
   onPurgeExclusions?: () => void;
   onOpenDebtCollection?: () => void;
+  onOpenCalendarModal?: () => void;
   isSyncing: boolean;
   activeView: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config';
   setActiveView: (view: 'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config') => void;
@@ -75,6 +76,7 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
   onOpenSopRules,
   onOpenCalculator,
   onOpenDebtCollection,
+  onOpenCalendarModal,
   stats,
   theme = 'dark',
   lang = 'en',
@@ -338,6 +340,32 @@ export const MoreActionsDropdown: React.FC<MoreActionsDropdownProps> = ({
                   </div>
                   <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                     {lang === 'es' ? 'Recuperar cuotas morosas y recargos por inasistencia' : 'Recover overdue late fees & dues'}
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Google Calendar Popup Link */}
+            {onOpenCalendarModal && (
+              <button
+                onClick={() => {
+                  onOpenCalendarModal();
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-3 transition-colors ${
+                  isLight ? 'hover:bg-amber-50 text-slate-800' : 'hover:bg-amber-950/40 text-slate-100'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 mt-0.5 shrink-0">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs text-amber-500 flex items-center justify-between">
+                    <span>{lang === 'es' ? '📅 Ver Google Calendar en Vivo' : '📅 View Live Google Calendar'}</span>
+                    <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded font-mono font-bold">Pop-up</span>
+                  </div>
+                  <p className={`text-[11px] line-clamp-1 mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    l46591dbdq7t070djs0ta7cbac@group.calendar.google.com
                   </p>
                 </div>
               </button>
