@@ -72,6 +72,19 @@ const REHEARSAL_DATES_2026 = [
   '2026-12-02', '2026-12-07', '2026-12-09', '2026-12-14', '2026-12-16', '2026-12-21', '2026-12-23', '2026-12-28', '2026-12-30'
 ];
 
+const VERIFIED_VICTORIA_RSVPS: Record<string, 'Yes' | 'No' | 'Maybe' | 'Awaiting'> = {
+  '2026-04-06': 'No',
+  '2026-04-08': 'No',
+  '2026-04-13': 'Maybe',
+  '2026-04-15': 'No',
+  '2026-04-20': 'Awaiting',
+  '2026-04-22': 'No',
+  '2026-04-27': 'Awaiting',
+  '2026-04-29': 'No',
+  '2026-05-04': 'No',
+  '2026-05-06': 'No'
+};
+
 export const INITIAL_ATTENDANCE_RECORDS: AttendanceRecord[] = REHEARSAL_DATES_2026.flatMap((dateStr, idx) => {
   const parts = dateStr.split('-').map(Number);
   const d = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -80,18 +93,41 @@ export const INITIAL_ATTENDANCE_RECORDS: AttendanceRecord[] = REHEARSAL_DATES_20
   const todayStr = '2026-08-09';
   const isFuture = dateStr > todayStr;
 
-  return INITIAL_PERFORMERS.map((p, pIdx) => ({
-    id: `rec_init_${dateStr}_${pIdx}_${idx}`,
-    date: dateStr,
-    day,
-    performerName: p.name,
-    performerEmail: p.email,
-    rsvp: 'Awaiting' as const,
-    attended: 'No' as const,
-    fees: isFuture ? 0 : 5,
-    notes: isFuture ? `Future scheduled practice session (${dateStr})` : `Scheduled practice session (${dateStr})`,
-    monthKey
-  }));
+  return INITIAL_PERFORMERS.map((p, pIdx) => {
+    const isVictoria = p.email.toLowerCase() === 'vibtg18@gmail.com';
+    const verifiedRsvp = isVictoria && VERIFIED_VICTORIA_RSVPS[dateStr] ? VERIFIED_VICTORIA_RSVPS[dateStr] : 'Awaiting';
+    
+    // Fee calculation under SOP Rules:
+    // RSVP No + Attended No = Excused ($0)
+    // RSVP Maybe + Attended No = Tentative ($0)
+    // RSVP Awaiting + Attended No = Unconfirmed ($5 past, $0 future)
+    let fee = 0;
+    let note = isFuture ? `Future scheduled practice session (${dateStr})` : `Scheduled practice session (${dateStr})`;
+
+    if (verifiedRsvp === 'No') {
+      fee = 0;
+      note = `Excused absence per Google Calendar RSVP No ($0)`;
+    } else if (verifiedRsvp === 'Maybe') {
+      fee = 0;
+      note = `Tentative notice per Google Calendar RSVP Maybe ($0)`;
+    } else {
+      fee = isFuture ? 0 : 5;
+      note = isFuture ? `Future scheduled practice session (${dateStr})` : `Unconfirmed Status ($5 Penalty)`;
+    }
+
+    return {
+      id: `rec_init_${dateStr}_${pIdx}_${idx}`,
+      date: dateStr,
+      day,
+      performerName: p.name,
+      performerEmail: p.email,
+      rsvp: verifiedRsvp as any,
+      attended: 'No' as const,
+      fees: fee,
+      notes: note,
+      monthKey
+    };
+  });
 });
 
 export const INITIAL_REPORT_LOGS: ReportLog[] = [];
