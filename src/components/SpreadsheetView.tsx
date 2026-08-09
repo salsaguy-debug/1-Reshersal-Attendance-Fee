@@ -1071,11 +1071,124 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                             <div className={`p-4 rounded-2xl border shadow-md transition-colors ${
                               isLight ? 'bg-white border-indigo-100' : 'bg-slate-900 border-indigo-900/50'
                             }`}>
-                              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                                <div className="flex items-center gap-2 font-bold text-xs text-indigo-500">
+                              {/* Drawer Header & Audit Trigger */}
+                              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                                <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-indigo-500">
                                   <Calendar className="w-4 h-4 text-indigo-500" />
                                   <span>2026 Monthly Rehearsal SOP Schedule ({row.performerName})</span>
                                 </div>
+
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (onInspectPerformer) {
+                                        onInspectPerformer(row.performerEmail);
+                                      } else if (setActiveView) {
+                                        setActiveView('performer');
+                                      }
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow transition-colors"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>{isEs ? 'Auditar Expediente Completo' : 'Audit Full Ledger & Expediente'}</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* 2026 Monthly Schedule Cards Grid */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {availableMonths.map(monthStr => {
+                                  const pEmailLower = row.performerEmail.toLowerCase().trim();
+                                  const monthRecords = records.filter(r => {
+                                    const rMonth = r.monthKey || (r as any).monthTab || '';
+                                    return rMonth === monthStr && r.performerEmail.toLowerCase().trim() === pEmailLower;
+                                  });
+
+                                  const monthFee = monthRecords.reduce((sum, r) => sum + (r.fees || 0), 0);
+                                  const displayMonth = translateMonthStr(monthStr, (lang || 'en') as Language);
+
+                                  return (
+                                    <div
+                                      key={monthStr}
+                                      className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${
+                                        isLight
+                                          ? monthFee > 0
+                                            ? 'bg-rose-50/60 border-rose-200'
+                                            : 'bg-slate-50 border-slate-200'
+                                          : monthFee > 0
+                                            ? 'bg-rose-950/30 border-rose-900/50'
+                                            : 'bg-slate-950/60 border-slate-800'
+                                      }`}
+                                    >
+                                      <div>
+                                        <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
+                                          <span className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                                            {displayMonth}
+                                          </span>
+                                          {monthFee > 0 ? (
+                                            <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                              -${monthFee.toFixed(2)}
+                                            </span>
+                                          ) : (
+                                            <span className="text-[11px] font-semibold font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                              $0.00
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {monthRecords.length === 0 ? (
+                                          <p className={`text-[11px] italic py-2 text-center ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {isEs ? 'Sin sesiones registradas este mes' : 'No rehearsal sessions logged'}
+                                          </p>
+                                        ) : (
+                                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                                            {monthRecords.map(rec => (
+                                              <div
+                                                key={rec.id}
+                                                className={`p-2 rounded-lg border text-[11px] flex flex-col gap-1.5 ${
+                                                  isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+                                                }`}
+                                              >
+                                                <div className="flex items-center justify-between">
+                                                  <span className="font-mono font-semibold">{rec.date} ({rec.day})</span>
+                                                  {rec.fees > 0 ? (
+                                                    <span className="font-bold text-rose-500">-${rec.fees.toFixed(2)}</span>
+                                                  ) : (
+                                                    <span className="font-semibold text-emerald-500">$0.00</span>
+                                                  )}
+                                                </div>
+
+                                                <div className="flex items-center justify-between gap-1">
+                                                  <div className="flex items-center gap-1.5">
+                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                                      rec.rsvp === 'Yes' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                      rec.rsvp === 'No' ? 'bg-amber-500/20 text-amber-400' :
+                                                      'bg-purple-500/20 text-purple-400'
+                                                    }`}>
+                                                      RSVP: {rec.rsvp}
+                                                    </span>
+                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                                      rec.attended === 'Yes' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                                                    }`}>
+                                                      {isEs ? 'Asistió:' : 'Attended:'} {rec.attended}
+                                                    </span>
+                                                  </div>
+                                                </div>
+
+                                                {rec.notes && (
+                                                  <p className={`text-[10px] truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                    {rec.notes}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </td>
