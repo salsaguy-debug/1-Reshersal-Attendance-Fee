@@ -60,7 +60,7 @@ export async function fetchGoogleCalendarEvents(
           const attendees: Array<{ email: string; responseStatus: string }> = [];
           const attendeeLines = block.match(/ATTENDEE[^\r\n]+/g) || [];
 
-          attendeeLines.forEach(line => {
+          attendeeLines.forEach((line: string) => {
             const partstatMatch = line.match(/PARTSTAT=(ACCEPTED|DECLINED|TENTATIVE|NEEDS-ACTION)/i);
             const mailtoMatch = line.match(/mailto:([^\s;>\r\n]+)/i);
 
