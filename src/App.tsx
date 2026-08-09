@@ -558,12 +558,19 @@ export default function App() {
   };
 
   // Fee calculation engine matching exact SOP BTG REV 7.4 rules from system manual
-  const calculateSopFee = (rsvp: RsvpStatus | string, attended: AttendedStatus | string): number => {
+  const calculateSopFee = (rsvp: RsvpStatus | string, attended: AttendedStatus | string, dateStr?: string): number => {
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Rule 0: Future rehearsal dates (date > todayStr) have not occurred yet -> $0 fee
+    if (dateStr && dateStr > todayStr) {
+      return 0;
+    }
+
     const r = String(rsvp || '').trim().toLowerCase();
     const a = String(attended || '').trim().toLowerCase();
     const isAttended = a === 'yes' || a === 'present' || a === '1' || a === 'true';
 
-    // 5. Unconfirmed Status ($5) -> RSVP = Awaiting / Maybe
+    // 5. Unconfirmed Status ($5) -> RSVP = Awaiting / Maybe (for past/current dates)
     if (r === 'awaiting' || r === 'maybe' || r === 'tentative' || r === 'unconfirmed' || r === '') {
       return config.feeRules.unconfirmedFee ?? 5;
     }
@@ -591,7 +598,12 @@ export default function App() {
     return config.feeRules.unconfirmedFee ?? 5;
   };
 
-  const getFeeNote = (rsvp: RsvpStatus | string, attended: AttendedStatus | string, fee: number): string => {
+  const getFeeNote = (rsvp: RsvpStatus | string, attended: AttendedStatus | string, fee: number, dateStr?: string): string => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dateStr && dateStr > todayStr) {
+      return 'Future scheduled rehearsal (Pending)';
+    }
+
     const r = String(rsvp || '').trim().toLowerCase();
     const a = String(attended || '').trim().toLowerCase();
     const isAttended = a === 'yes' || a === 'present' || a === '1' || a === 'true';
@@ -875,17 +887,17 @@ export default function App() {
 
         if (existingRec) {
           const finalRsvp = (frRsvp && frRsvp !== 'Awaiting') ? frRsvp : existingRec.rsvp;
-          const fee = calculateSopFee(finalRsvp, checkInAttended);
+          const fee = calculateSopFee(finalRsvp, checkInAttended, existingRec.date);
           recordMap.set(key, {
             ...existingRec,
             rsvp: finalRsvp,
             attended: checkInAttended,
             fees: fee,
-            notes: getFeeNote(finalRsvp, checkInAttended, fee)
+            notes: getFeeNote(finalRsvp, checkInAttended, fee, existingRec.date)
           });
         } else {
           const finalRsvp = frRsvp;
-          const fee = calculateSopFee(finalRsvp, checkInAttended);
+          const fee = calculateSopFee(finalRsvp, checkInAttended, fr.practiceDate);
           recordMap.set(key, {
             id: `fr_att_${fr.practiceDate}_${Math.random().toString(36).substring(2, 6)}`,
             date: fr.practiceDate,
@@ -896,7 +908,7 @@ export default function App() {
             rsvp: finalRsvp,
             attended: checkInAttended,
             fees: fee,
-            notes: getFeeNote(finalRsvp, checkInAttended, fee)
+            notes: getFeeNote(finalRsvp, checkInAttended, fee, fr.practiceDate)
           });
         }
       });
@@ -907,14 +919,14 @@ export default function App() {
         .filter(r => !excludedEmails.has(r.performerEmail.toLowerCase().trim()))
         .filter(r => !legacySaturdayDates.has(r.date))
         .map(r => {
-          const fee = calculateSopFee(r.rsvp, r.attended);
+          const fee = calculateSopFee(r.rsvp, r.attended, r.date);
           const emailLower = r.performerEmail.toLowerCase().trim();
           const pMatch = performers.find(p => p.email.toLowerCase().trim() === emailLower);
           return {
             ...r,
             performerName: pMatch ? pMatch.name : r.performerName,
             fees: fee,
-            notes: getFeeNote(r.rsvp, r.attended, fee)
+            notes: getFeeNote(r.rsvp, r.attended, fee, r.date)
           };
         });
 
@@ -1047,13 +1059,13 @@ export default function App() {
     setRecords(prev => {
       const updated = prev.map(r => {
         if (r.id === id) {
-          const fee = calculateSopFee(newRsvp, newAttended);
+          const fee = calculateSopFee(newRsvp, newAttended, r.date);
           return {
             ...r,
             rsvp: newRsvp,
             attended: newAttended,
             fees: fee,
-            notes: getFeeNote(newRsvp, newAttended, fee)
+            notes: getFeeNote(newRsvp, newAttended, fee, r.date)
           };
         }
         return r;

@@ -77,6 +77,8 @@ export const INITIAL_ATTENDANCE_RECORDS: AttendanceRecord[] = REHEARSAL_DATES_20
   const d = new Date(parts[0], parts[1] - 1, parts[2]);
   const monthKey = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const todayStr = '2026-08-09';
+  const isFuture = dateStr > todayStr;
 
   return INITIAL_PERFORMERS.map((p, pIdx) => ({
     id: `rec_init_${dateStr}_${pIdx}_${idx}`,
@@ -86,8 +88,8 @@ export const INITIAL_ATTENDANCE_RECORDS: AttendanceRecord[] = REHEARSAL_DATES_20
     performerEmail: p.email,
     rsvp: 'Awaiting' as const,
     attended: 'No' as const,
-    fees: 5,
-    notes: `Scheduled practice session (${dateStr})`,
+    fees: isFuture ? 0 : 5,
+    notes: isFuture ? `Future scheduled practice session (${dateStr})` : `Scheduled practice session (${dateStr})`,
     monthKey
   }));
 });

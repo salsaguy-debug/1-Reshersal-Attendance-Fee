@@ -174,7 +174,7 @@ export function populateMissingRehearsalDates(
   existingRecords: AttendanceRecord[],
   performers: Performer[],
   calendarEvents: CalendarEvent[],
-  feeRules = { unconfirmedFee: 5 },
+  feeRules: any = { unconfirmedFee: 5, noShowPenalty: 5 },
   baselineDate: string = '2026-04-01',
   currentDateStr?: string
 ): { updatedRecords: AttendanceRecord[]; addedCount: number } {
@@ -261,9 +261,11 @@ export function populateMissingRehearsalDates(
       const key = `${eventDate}_${p.email.toLowerCase().trim()}`;
       const calRsvp = attendeeRsvpMap.get(p.email.toLowerCase().trim());
       const existing = recordMap.get(key);
+      const isFuture = eventDate > todayStr;
 
       if (!existing) {
         const rsvpVal = calRsvp || 'Awaiting';
+        const feeVal = isFuture ? 0 : (rsvpVal === 'Yes' ? (feeRules.noShowPenalty ?? 5) : (feeRules.unconfirmedFee ?? 5));
         recordMap.set(key, {
           id: `gcal_rec_${eventDate}_${p.id}_${Math.random().toString(36).substring(2, 6)}`,
           date: eventDate,
@@ -272,17 +274,19 @@ export function populateMissingRehearsalDates(
           performerEmail: p.email,
           rsvp: rsvpVal,
           attended: 'No',
-          fees: rsvpVal === 'Yes' ? 5 : (feeRules.unconfirmedFee ?? 5),
-          notes: calRsvp 
-            ? `Auto-populated from Google Calendar (RSVP: ${calRsvp})` 
-            : `Past practice record (Date: ${eventDate})`,
+          fees: feeVal,
+          notes: isFuture 
+            ? `Future scheduled practice session (${eventDate})`
+            : (calRsvp ? `Auto-populated from Google Calendar (RSVP: ${calRsvp})` : `Practice record (${eventDate})`),
           monthKey
         });
         addedCount++;
       } else if (calRsvp && calRsvp !== existing.rsvp) {
+        const feeVal = isFuture ? 0 : existing.fees;
         recordMap.set(key, {
           ...existing,
           rsvp: calRsvp,
+          fees: feeVal,
           notes: `RSVP updated from Google Calendar (${calRsvp})`
         });
       }
