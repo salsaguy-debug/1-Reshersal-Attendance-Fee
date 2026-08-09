@@ -1941,11 +1941,14 @@ export default function App() {
         lang={lang}
       />
 
-      {/* Embedded Live Google Calendar Popup Modal */}
+      {/* Embedded Live Google Calendar & RSVP Responses Popup Modal */}
       <CalendarModal
         isOpen={showCalendarModal}
         onClose={() => setShowCalendarModal(false)}
         calendarId={config.calendarId || DEFAULT_CALENDAR_ID}
+        records={records}
+        performers={performers}
+        onUpdateRecord={handleUpdateRecord}
         theme={theme}
         lang={lang}
       />
