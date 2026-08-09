@@ -53,7 +53,7 @@ export async function fetchLiveGoogleSheetData(
         const col5Str = (cols[5] || '').trim().toLowerCase();
 
         let checkInStatus: 'Yes' | 'No' = 'Yes';
-        let rsvpStatus: 'Yes' | 'No' | 'Maybe' | 'Awaiting' = 'Awaiting';
+        let rsvpStatus: 'Yes' | 'No' | 'Maybe' | 'Awaiting' = 'Yes';
 
         if (col4Str.includes('no-show') || col4Str.includes('missed') || col5Str.includes('no-show') || col5Str.includes('missed')) {
           rsvpStatus = 'Yes';
@@ -67,7 +67,10 @@ export async function fetchLiveGoogleSheetData(
         } else if (col4Str.includes('maybe') || col4Str.includes('tentative') || col5Str.includes('maybe')) {
           rsvpStatus = 'Maybe';
           checkInStatus = (col5Str.includes('yes') || col5Str.includes('present')) ? 'Yes' : 'No';
-        } else if (col4Str.includes('yes') || col4Str.includes('confirmed')) {
+        } else if (col4Str.includes('awaiting') || col4Str.includes('pending')) {
+          rsvpStatus = 'Awaiting';
+          checkInStatus = (col5Str.includes('yes') || col5Str.includes('present')) ? 'Yes' : 'No';
+        } else {
           rsvpStatus = 'Yes';
           checkInStatus = (col5Str.includes('no') || col5Str.includes('absent')) ? 'No' : 'Yes';
         }
