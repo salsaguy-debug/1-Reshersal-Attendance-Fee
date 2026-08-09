@@ -282,12 +282,27 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
     );
   };
 
-  // Sorted Master Summary Rows
+  // Sorted Master Summary Rows & Ledger Rows
   const sortedMasterRows = useMemo(() => {
     if (!sortColumn) return filteredMasterRows;
     return [...filteredMasterRows].sort((a, b) => {
       let aVal: any = '';
       let bVal: any = '';
+
+      const aEmail = a.performerEmail.toLowerCase().trim();
+      const bEmail = b.performerEmail.toLowerCase().trim();
+
+      const aPayments = (payments || []).filter((pay: any) => pay.performerEmail?.toLowerCase().trim() === aEmail);
+      const bPayments = (payments || []).filter((pay: any) => pay.performerEmail?.toLowerCase().trim() === bEmail);
+
+      const aPaid = aPayments.reduce((sum: number, pay: any) => sum + (pay.amount || 0), 0);
+      const bPaid = bPayments.reduce((sum: number, pay: any) => sum + (pay.amount || 0), 0);
+
+      const aOwed = Math.max(0, a.totalFees - aPaid);
+      const bOwed = Math.max(0, b.totalFees - bPaid);
+
+      const aExcluded = exclusions.some(e => e.email.toLowerCase().trim() === aEmail);
+      const bExcluded = exclusions.some(e => e.email.toLowerCase().trim() === bEmail);
 
       if (sortColumn === 'performerName') {
         aVal = a.performerName.toLowerCase();
@@ -295,12 +310,18 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
       } else if (sortColumn === 'performerEmail') {
         aVal = a.performerEmail.toLowerCase();
         bVal = b.performerEmail.toLowerCase();
-      } else if (sortColumn === 'totalFees') {
+      } else if (sortColumn === 'totalFees' || sortColumn === 'totalLate') {
         aVal = a.totalFees;
         bVal = b.totalFees;
+      } else if (sortColumn === 'totalPaid') {
+        aVal = aPaid;
+        bVal = bPaid;
+      } else if (sortColumn === 'netOwed' || sortColumn === 'owesYear') {
+        aVal = aOwed;
+        bVal = bOwed;
       } else if (sortColumn === 'status') {
-        aVal = a.totalFees > 0 ? 1 : 0;
-        bVal = b.totalFees > 0 ? 1 : 0;
+        aVal = aExcluded ? 2 : aOwed > 0 ? 1 : 0;
+        bVal = bExcluded ? 2 : bOwed > 0 ? 1 : 0;
       } else if (sortColumn.startsWith('month_')) {
         const monthKey = sortColumn.replace('month_', '');
         aVal = a.monthlyFees[monthKey] || 0;
@@ -311,7 +332,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [filteredMasterRows, sortColumn, sortDirection]);
+  }, [filteredMasterRows, sortColumn, sortDirection, payments, exclusions]);
 
   // Sorted Monthly Attendance Records
   const sortedMonthlyRecords = useMemo(() => {
@@ -1105,28 +1126,28 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                 <tr className={`border-b uppercase font-mono text-[11px] tracking-wider transition-colors ${
                   isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-950 text-slate-300 border-slate-800'
                 }`}>
-                  <th className="p-3">{isEs ? 'NOMBRE DEL INTEGRANTE' : 'PERFORMER NAME'}</th>
-                  <th className="p-3">{isEs ? 'CORREO ELECTRÓNICO' : 'EMAIL'}</th>
-                  <th className="p-3 text-center">{isEs ? 'ESTADO' : 'STATUS'}</th>
-                  <th className="p-3 text-right">{isEs ? 'TOTAL PAGADO' : 'TOTAL PAID'}</th>
-                  <th className="p-3 text-right">{isEs ? 'TOTAL MORA' : 'TOTAL LATE'}</th>
-                  <th className="p-3 text-right">{isEs ? 'DEUDA ANUAL' : 'OWES YEAR'}</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">{isEs ? 'ENE 2026 (EXENTO)' : 'JAN 2026 (EXEMPT)'}</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">{isEs ? 'FEB 2026 (EXENTO)' : 'FEB 2026 (EXEMPT)'}</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">{isEs ? 'MAR 2026 (EXENTO)' : 'MAR 2026 (EXEMPT)'}</th>
-                  <th className="p-3 text-right">{isEs ? 'ABR 2026' : 'APR 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'MAY 2026' : 'MAY 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'JUN 2026' : 'JUN 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'JUL 2026' : 'JUL 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'AGO 2026' : 'AUG 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'SEP 2026' : 'SEP 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'OCT 2026' : 'OCT 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'NOV 2026' : 'NOV 2026'}</th>
-                  <th className="p-3 text-right">{isEs ? 'DIC 2026' : 'DEC 2026'}</th>
+                  {renderSortableHeader('performerName', isEs ? 'NOMBRE DEL INTEGRANTE' : 'PERFORMER NAME')}
+                  {renderSortableHeader('performerEmail', isEs ? 'CORREO ELECTRÓNICO' : 'EMAIL')}
+                  {renderSortableHeader('status', isEs ? 'ESTADO' : 'STATUS', 'center')}
+                  {renderSortableHeader('totalPaid', isEs ? 'TOTAL PAGADO' : 'TOTAL PAID', 'right')}
+                  {renderSortableHeader('totalLate', isEs ? 'TOTAL MORA' : 'TOTAL LATE', 'right')}
+                  {renderSortableHeader('owesYear', isEs ? 'DEUDA ANUAL' : 'OWES YEAR', 'right')}
+                  {renderSortableHeader('month_January 2026', isEs ? 'ENE 2026 (EXENTO)' : 'JAN 2026 (EXEMPT)', 'center', 'bg-slate-200/50 dark:bg-slate-900/60')}
+                  {renderSortableHeader('month_February 2026', isEs ? 'FEB 2026 (EXENTO)' : 'FEB 2026 (EXEMPT)', 'center', 'bg-slate-200/50 dark:bg-slate-900/60')}
+                  {renderSortableHeader('month_March 2026', isEs ? 'MAR 2026 (EXENTO)' : 'MAR 2026 (EXEMPT)', 'center', 'bg-slate-200/50 dark:bg-slate-900/60')}
+                  {renderSortableHeader('month_April 2026', isEs ? 'ABR 2026' : 'APR 2026', 'right')}
+                  {renderSortableHeader('month_May 2026', isEs ? 'MAY 2026' : 'MAY 2026', 'right')}
+                  {renderSortableHeader('month_June 2026', isEs ? 'JUN 2026' : 'JUN 2026', 'right')}
+                  {renderSortableHeader('month_July 2026', isEs ? 'JUL 2026' : 'JUL 2026', 'right')}
+                  {renderSortableHeader('month_August 2026', isEs ? 'AGO 2026' : 'AUG 2026', 'right')}
+                  {renderSortableHeader('month_September 2026', isEs ? 'SEP 2026' : 'SEP 2026', 'right')}
+                  {renderSortableHeader('month_October 2026', isEs ? 'OCT 2026' : 'OCT 2026', 'right')}
+                  {renderSortableHeader('month_November 2026', isEs ? 'NOV 2026' : 'NOV 2026', 'right')}
+                  {renderSortableHeader('month_December 2026', isEs ? 'DIC 2026' : 'DEC 2026', 'right')}
                 </tr>
               </thead>
               <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
-                {masterSummary.map((mRow, idx) => {
+                {sortedMasterRows.map((mRow, idx) => {
                   const emailLower = mRow.performerEmail.toLowerCase().trim();
                   const pObj = performers.find(p => p.email.toLowerCase().trim() === emailLower) || {
                     id: `p_${idx}`,
