@@ -14,6 +14,8 @@ import { Language } from '../utils/translations';
 interface CalculatorWidgetProps {
   isOpen: boolean;
   onClose: () => void;
+  performers?: any[];
+  records?: any[];
   theme?: 'dark' | 'light';
   lang?: Language;
 }

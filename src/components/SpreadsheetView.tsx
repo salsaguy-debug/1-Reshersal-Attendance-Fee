@@ -36,7 +36,7 @@ import {
   RsvpStatus,
   AttendedStatus
 } from '../types';
-import { Language, translations, translateMonthStr } from '../utils/translations';
+import { Language, translations, translateMonthStr, getTabDisplayName } from '../utils/translations';
 
 interface SpreadsheetViewProps {
   records: AttendanceRecord[];
@@ -111,18 +111,28 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   const isEs = lang === 'es';
   const t = translations[lang] || translations.en;
 
+  const isMasterSummaryTab = (tab: string) => tab === 'Master Summary' || tab === 'Resumen Maestro';
+  const isMasterLedgerTab = (tab: string) =>
+    tab === '2026 Master Dues Accounting Ledger' ||
+    tab === '2026 Master Accounting Ledger' ||
+    tab === 'MASTER DUES ACCOUNTING LEDGER' ||
+    tab === 'Libro Mayor 2026' ||
+    tab === 'Libro Mayor Contable 2026';
+
   // Active Tab selection
   const tabs = useMemo(() => {
     return [
       'Master Summary',
-      'Libro Mayor 2026',
+      'MASTER DUES ACCOUNTING LEDGER',
       ...availableMonths,
       'Form Responses 1',
       'Excluded these Performers'
     ];
   }, [availableMonths]);
 
-  const [activeTab, setActiveTab] = useState<string>('Master Summary');
+  const [internalActiveTab, setInternalActiveTab] = useState<string>('Master Summary');
+  const activeTab = externalActiveTab || internalActiveTab;
+  const setActiveTab = externalSetActiveTab || setInternalActiveTab;
 
   // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
@@ -581,15 +591,64 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
     let filename = `Tradicion_${activeTab.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
     let csvRows: string[] = [];
 
-    if (activeTab === 'Master Summary') {
-      csvRows.push(['Performer Name', 'Email', ...availableMonths, 'Total Fees', 'Status'].join(','));
+    if (isMasterSummaryTab(activeTab)) {
+      csvRows.push([
+        isEs ? 'Nombre del Integrante' : 'Performer Name',
+        isEs ? 'Correo Electrónico' : 'Email',
+        ...availableMonths.map(m => translateMonthStr(m, (lang || 'en') as Language)),
+        isEs ? 'Saldo Total SOP' : 'Total SOP Fees',
+        isEs ? 'Estado de Cuenta' : 'Status'
+      ].join(','));
       masterSummary.forEach(m => {
         const row = [
           `"${m.performerName}"`,
           `"${m.performerEmail}"`,
           ...availableMonths.map(mn => m.monthlyFees[mn] || 0),
           m.totalFees,
-          m.totalFees > 0 ? 'Outstanding' : 'Paid in Full'
+          m.totalFees > 0 ? (isEs ? 'Pendiente' : 'Outstanding') : (isEs ? 'Pagado Completo' : 'Paid in Full')
+        ];
+        csvRows.push(row.join(','));
+      });
+    } else if (isMasterLedgerTab(activeTab)) {
+      csvRows.push([
+        isEs ? 'Nombre del Integrante' : 'Performer Name',
+        isEs ? 'Correo Electrónico' : 'Email',
+        isEs ? 'Estado' : 'Status',
+        isEs ? 'Total Pagado' : 'Total Paid',
+        isEs ? 'Total Mora' : 'Total Late',
+        isEs ? 'Deuda Anual' : 'Owes Year',
+        isEs ? 'Ene 2026 (Exento)' : 'Jan 2026 (Exempt)',
+        isEs ? 'Feb 2026 (Exento)' : 'Feb 2026 (Exempt)',
+        isEs ? 'Mar 2026 (Exento)' : 'Mar 2026 (Exempt)',
+        isEs ? 'Abr 2026' : 'Apr 2026',
+        isEs ? 'May 2026' : 'May 2026',
+        isEs ? 'Jun 2026' : 'Jun 2026',
+        isEs ? 'Jul 2026' : 'Jul 2026',
+        isEs ? 'Ago 2026' : 'Aug 2026',
+        isEs ? 'Sep 2026' : 'Sep 2026',
+        isEs ? 'Oct 2026' : 'Oct 2026',
+        isEs ? 'Nov 2026' : 'Nov 2026',
+        isEs ? 'Dic 2026' : 'Dec 2026'
+      ].join(','));
+      masterSummary.forEach(mRow => {
+        const emailLower = mRow.performerEmail.toLowerCase().trim();
+        const isExcluded = exclusions.some(e => e.email.toLowerCase().trim() === emailLower);
+        const pPayments = (payments || []).filter((pay: any) => pay.performerEmail?.toLowerCase().trim() === emailLower);
+        const totalPaid = pPayments.reduce((sum: number, pay: any) => sum + (pay.amount || 0), 0);
+        const netOwed = Math.max(0, mRow.totalFees - totalPaid);
+        const statusStr = isExcluded ? (isEs ? 'Excluido' : 'Excluded') : netOwed > 0 ? (isEs ? 'Pendiente' : 'Outstanding') : (isEs ? 'Al Día' : 'Current');
+
+        const row = [
+          `"${mRow.performerName}"`,
+          `"${mRow.performerEmail}"`,
+          `"${statusStr}"`,
+          totalPaid.toFixed(2),
+          mRow.totalFees.toFixed(2),
+          netOwed.toFixed(2),
+          isEs ? 'Exento' : 'Exempt',
+          isEs ? 'Exento' : 'Exempt',
+          isEs ? 'Exento' : 'Exempt',
+          ...['April 2026', 'May 2026', 'June 2026', 'July 2026', 'August 2026', 'September 2026', 'October 2026', 'November 2026', 'December 2026'].map(mn => mRow.monthlyFees[mn] || 0)
         ];
         csvRows.push(row.join(','));
       });
@@ -654,7 +713,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               </span>
             </div>
             <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              {isEs ? 'Viendo la pestaña:' : 'Viewing sheet tab:'} <span className="text-emerald-500 font-semibold">{translateMonthStr(activeTab, (lang || 'en') as Language)}</span>
+              {isEs ? 'Viendo la pestaña:' : 'Viewing sheet tab:'} <span className="text-emerald-500 font-semibold">{getTabDisplayName(activeTab, (lang || 'en') as Language)}</span>
             </p>
           </div>
         </div>
@@ -680,13 +739,8 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
         isLight ? 'bg-slate-100/80 border-slate-200' : 'bg-slate-950/80 border-slate-800'
       }`}>
         {tabs.map(tabName => {
-          const isActive = activeTab === tabName;
-          let displayTabName = translateMonthStr(tabName, (lang || 'en') as Language);
-          if (isEs) {
-            if (tabName === '2026 Master Accounting Ledger' || tabName === 'Master Summary') displayTabName = 'Libro Mayor Contable 2026';
-            if (tabName === 'Form Responses 1') displayTabName = 'Respuestas del Formulario 1';
-            if (tabName === 'Excluded these Performers') displayTabName = 'Integrantes Excluidos';
-          }
+          const isActive = activeTab === tabName || (isMasterLedgerTab(tabName) && isMasterLedgerTab(activeTab)) || (isMasterSummaryTab(tabName) && isMasterSummaryTab(activeTab));
+          const displayTabName = getTabDisplayName(tabName, (lang || 'en') as Language);
 
           return (
             <button
@@ -704,7 +758,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
             >
               <FileSpreadsheet className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-500' : isLight ? 'text-slate-400' : 'text-slate-500'}`} />
               {displayTabName}
-              {(tabName === '2026 Master Accounting Ledger' || tabName === 'Master Summary') && (
+              {isMasterLedgerTab(tabName) && (
                 <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
                   isLight ? 'bg-purple-100 text-purple-700' : 'bg-purple-900/60 text-purple-300'
                 }`}>
@@ -724,7 +778,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
       </div>
 
       {/* Filter & Search Toolbar */}
-      {!(activeTab === '2026 Master Accounting Ledger' || activeTab === 'Master Summary') && (
+      {!(isMasterSummaryTab(activeTab) || isMasterLedgerTab(activeTab)) && (
       <div className={`p-3 border-b flex flex-col sm:flex-row items-center justify-between gap-3 text-xs transition-colors ${
         isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/90 border-slate-800 text-slate-200'
       }`}>
@@ -835,7 +889,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
       )}
 
       {/* Tab 1: Master Summary Sheet */}
-      {activeTab === 'Master Summary' && (
+      {isMasterSummaryTab(activeTab) && (
         <div className="overflow-x-auto">
           <table className={`w-full text-left text-xs border-collapse ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
             <thead>
@@ -1016,7 +1070,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
       )}
 
       {/* Tab 2: 2026 MASTER DUES ACCOUNTING LEDGER (Libro Mayor Contable 2026) */}
-      {(activeTab === 'Libro Mayor 2026' || activeTab === '2026 Master Accounting Ledger') && (
+      {isMasterLedgerTab(activeTab) && (
         <div>
           {/* Header Banner */}
           <div className={`p-4 border-b flex flex-col md:flex-row md:items-center justify-between gap-3 ${
@@ -1029,14 +1083,16 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-extrabold text-sm sm:text-base tracking-tight text-purple-600 dark:text-purple-300">
-                    2026 MASTER DUES ACCOUNTING LEDGER
+                    MASTER DUES ACCOUNTING LEDGER
                   </h3>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold">
-                    {performers.length || masterSummary.length} Records
+                    {performers.length || masterSummary.length} {isEs ? 'Registros' : 'Records'}
                   </span>
                 </div>
                 <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                  Live monthly breakdown with carryover balances and weekly late penalties
+                  {isEs 
+                    ? 'Desglose mensual en vivo con saldos de arrastre y penalizaciones semanales por mora' 
+                    : 'Live monthly breakdown with carryover balances and weekly late penalties'}
                 </p>
               </div>
             </div>
@@ -1049,24 +1105,24 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                 <tr className={`border-b uppercase font-mono text-[11px] tracking-wider transition-colors ${
                   isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-950 text-slate-300 border-slate-800'
                 }`}>
-                  <th className="p-3">PERFORMER NAME</th>
-                  <th className="p-3">EMAIL</th>
-                  <th className="p-3 text-center">STATUS</th>
-                  <th className="p-3 text-right">TOTAL PAID</th>
-                  <th className="p-3 text-right">TOTAL LATE</th>
-                  <th className="p-3 text-right">OWES YEAR</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">JAN 2026 (EXEMPT)</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">FEB 2026 (EXEMPT)</th>
-                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">MAR 2026 (EXEMPT)</th>
-                  <th className="p-3 text-right">APR 2026</th>
-                  <th className="p-3 text-right">MAY 2026</th>
-                  <th className="p-3 text-right">JUN 2026</th>
-                  <th className="p-3 text-right">JUL 2026</th>
-                  <th className="p-3 text-right">AUG 2026</th>
-                  <th className="p-3 text-right">SEP 2026</th>
-                  <th className="p-3 text-right">OCT 2026</th>
-                  <th className="p-3 text-right">NOV 2026</th>
-                  <th className="p-3 text-right">DEC 2026</th>
+                  <th className="p-3">{isEs ? 'NOMBRE DEL INTEGRANTE' : 'PERFORMER NAME'}</th>
+                  <th className="p-3">{isEs ? 'CORREO ELECTRÓNICO' : 'EMAIL'}</th>
+                  <th className="p-3 text-center">{isEs ? 'ESTADO' : 'STATUS'}</th>
+                  <th className="p-3 text-right">{isEs ? 'TOTAL PAGADO' : 'TOTAL PAID'}</th>
+                  <th className="p-3 text-right">{isEs ? 'TOTAL MORA' : 'TOTAL LATE'}</th>
+                  <th className="p-3 text-right">{isEs ? 'DEUDA ANUAL' : 'OWES YEAR'}</th>
+                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">{isEs ? 'ENE 2026 (EXENTO)' : 'JAN 2026 (EXEMPT)'}</th>
+                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">{isEs ? 'FEB 2026 (EXENTO)' : 'FEB 2026 (EXEMPT)'}</th>
+                  <th className="p-3 text-center bg-slate-200/50 dark:bg-slate-900/60">{isEs ? 'MAR 2026 (EXENTO)' : 'MAR 2026 (EXEMPT)'}</th>
+                  <th className="p-3 text-right">{isEs ? 'ABR 2026' : 'APR 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'MAY 2026' : 'MAY 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'JUN 2026' : 'JUN 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'JUL 2026' : 'JUL 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'AGO 2026' : 'AUG 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'SEP 2026' : 'SEP 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'OCT 2026' : 'OCT 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'NOV 2026' : 'NOV 2026'}</th>
+                  <th className="p-3 text-right">{isEs ? 'DIC 2026' : 'DEC 2026'}</th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
@@ -1134,15 +1190,15 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                       <td className="p-3 text-center font-bold">
                         {isExcluded ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                            🛡️ Excluded
+                            🛡️ {isEs ? 'Excluido' : 'Excluded'}
                           </span>
                         ) : netOwed > 0 ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                            ⚠️ Outstanding
+                            ⚠️ {isEs ? 'Pendiente' : 'Outstanding'}
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            🟢 Current
+                            🟢 {isEs ? 'Al Día' : 'Current'}
                           </span>
                         )}
                       </td>
@@ -1168,17 +1224,17 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
 
                       {/* JAN 2026 (EXEMPT) */}
                       <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
-                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                        {isEs ? 'Pagado: $0 | Saldo: $0' : 'Paid: $0 | Bal: $0'} <span className="font-bold text-indigo-400">({isEs ? 'EXENTO' : 'EXEMPT'})</span>
                       </td>
 
                       {/* FEB 2026 (EXEMPT) */}
                       <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
-                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                        {isEs ? 'Pagado: $0 | Saldo: $0' : 'Paid: $0 | Bal: $0'} <span className="font-bold text-indigo-400">({isEs ? 'EXENTO' : 'EXEMPT'})</span>
                       </td>
 
                       {/* MAR 2026 (EXEMPT) */}
                       <td className="p-3 text-center font-mono text-[10px] bg-slate-100/50 dark:bg-slate-950/40 text-slate-400">
-                        Paid: $0 | Bal: $0 <span className="font-bold text-indigo-400">(EXEMPT)</span>
+                        {isEs ? 'Pagado: $0 | Saldo: $0' : 'Paid: $0 | Bal: $0'} <span className="font-bold text-indigo-400">({isEs ? 'EXENTO' : 'EXEMPT'})</span>
                       </td>
 
                       {/* APR 2026 - DEC 2026 */}
@@ -1187,9 +1243,9 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                         return (
                           <td key={m} className="p-3 text-right font-mono text-[11px]">
                             {fee > 0 ? (
-                              <span className="text-rose-400 font-semibold">Bal: -${fee.toFixed(0)}</span>
+                              <span className="text-rose-400 font-semibold">{isEs ? 'Saldo:' : 'Bal:'} -${fee.toFixed(0)}</span>
                             ) : (
-                              <span className="text-slate-500">Paid: $0 | Bal: $0</span>
+                              <span className="text-slate-500">{isEs ? 'Pagado: $0 | Saldo: $0' : 'Paid: $0 | Bal: $0'}</span>
                             )}
                           </td>
                         );

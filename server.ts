@@ -35,7 +35,37 @@ let sharedDbState: SharedDatabase = {
 const legacySaturdayDates = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
 const sanitizeRecords = (recs: any[]) => {
   if (!Array.isArray(recs)) return [];
-  return recs.filter(r => !r.date || !legacySaturdayDates.has(r.date));
+  const todayStr = new Date().toISOString().split('T')[0];
+  return recs.filter(r => !r.date || (!legacySaturdayDates.has(r.date) && r.date <= todayStr));
+};
+
+const DEFAULT_SERVER_CONFIG = {
+  companyName: 'Tradición Dance Co.',
+  systemVersion: 'BTG REV 7.4',
+  calendarId: 'l46591dbdq7t070djs0ta7cbac@group.calendar.google.com',
+  googleSheetId: '19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk',
+  googleSheetUrl: 'https://docs.google.com/spreadsheets/d/19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk/edit?usp=sharing',
+  adminEmails: ['rodriguez2113@gmail.com', 'admin@tradiciondance.org', 'director@tradiciondance.org'],
+  fallbackExclusions: ['former.dancer@tradiciondance.com', 'archived.member@gmail.com'],
+  baselineDate: '2026-04-01',
+  feeRules: {
+    excusedFee: 0,
+    unannouncedFee: 5,
+    unconfirmedFee: 5,
+    noShowPenalty: 5,
+    verifiedFee: 0,
+  },
+  activeMonths: [
+    'April 2026',
+    'May 2026',
+    'June 2026',
+    'July 2026',
+    'August 2026',
+    'September 2026',
+    'October 2026',
+    'November 2026',
+    'December 2026'
+  ]
 };
 
 // Ensure data folder and shared DB file exist
@@ -51,6 +81,9 @@ try {
         sharedDbState.records = sanitizeRecords(sharedDbState.records);
       }
     }
+  }
+  if (!sharedDbState.config) {
+    sharedDbState.config = DEFAULT_SERVER_CONFIG;
   }
 } catch (err) {
   console.error("[Shared DB] Error initializing file storage:", err);

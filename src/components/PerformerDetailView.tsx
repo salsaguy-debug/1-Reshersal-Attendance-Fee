@@ -520,6 +520,18 @@ SOP Compliance Engine Rev 7.4`;
                         <h3 className={`font-black text-xl sm:text-2xl ${isLight ? 'text-slate-900' : 'text-white'}`}>
                           {currentPerformer.name}
                         </h3>
+                        <button
+                          type="button"
+                          onClick={() => onEditPerformer ? onEditPerformer(currentPerformer) : handleOpenEditPerformer(currentPerformer)}
+                          className={`p-1.5 rounded-lg border transition-colors ${
+                            isLight
+                              ? 'bg-slate-100 hover:bg-purple-100 border-slate-300 text-slate-600 hover:text-purple-700'
+                              : 'bg-slate-800 hover:bg-purple-950 border-slate-700 text-slate-300 hover:text-purple-300'
+                          }`}
+                          title={isEs ? `Editar perfil de ${currentPerformer.name}` : `Edit ${currentPerformer.name}'s profile`}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
                         {currentSummary.isExcluded ? (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/30 flex items-center gap-1">
                             <ShieldAlert className="w-3.5 h-3.5" />

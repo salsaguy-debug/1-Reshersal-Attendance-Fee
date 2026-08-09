@@ -16,12 +16,45 @@ export const monthTranslations: Record<string, { en: string; es: string }> = {
 };
 
 export function translateMonthStr(monthStr: string, lang: Language): string {
-  if (lang === 'en' || !monthStr) return monthStr;
+  if (!monthStr) return monthStr;
   let translated = monthStr;
   Object.entries(monthTranslations).forEach(([enMonth, dict]) => {
-    translated = translated.replace(new RegExp(`\\b${enMonth}\\b`, 'gi'), dict.es);
+    if (lang === 'es') {
+      translated = translated.replace(new RegExp(`\\b${enMonth}\\b`, 'gi'), dict.es);
+    } else {
+      translated = translated.replace(new RegExp(`\\b${dict.es}\\b`, 'gi'), dict.en);
+    }
   });
   return translated;
+}
+
+export function getTabDisplayName(tabName: string, lang: Language): string {
+  if (!tabName) return '';
+  const isEs = lang === 'es';
+
+  if (tabName === 'Master Summary' || tabName === 'Resumen Maestro') {
+    return isEs ? 'Resumen Maestro' : 'Master Summary';
+  }
+
+  if (
+    tabName === '2026 Master Dues Accounting Ledger' ||
+    tabName === '2026 Master Accounting Ledger' ||
+    tabName === 'MASTER DUES ACCOUNTING LEDGER' ||
+    tabName === 'Libro Mayor 2026' ||
+    tabName === 'Libro Mayor Contable 2026'
+  ) {
+    return 'MASTER DUES ACCOUNTING LEDGER';
+  }
+
+  if (tabName === 'Form Responses 1' || tabName === 'Respuestas del Formulario 1') {
+    return isEs ? 'Respuestas del Formulario 1' : 'Form Responses 1';
+  }
+
+  if (tabName === 'Excluded these Performers' || tabName === 'Integrantes Excluidos' || tabName === 'Excluded Performers') {
+    return isEs ? 'Integrantes Excluidos' : 'Excluded Performers';
+  }
+
+  return translateMonthStr(tabName, lang);
 }
 
 export const translations = {

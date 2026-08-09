@@ -109,15 +109,18 @@ export function populateMissingRehearsalDates(
   performers: Performer[],
   calendarEvents: CalendarEvent[],
   feeRules = { unconfirmedFee: 5 },
-  baselineDate: string = '2026-04-01'
+  baselineDate: string = '2026-04-01',
+  currentDateStr?: string
 ): { updatedRecords: AttendanceRecord[]; addedCount: number } {
+  const todayStr = currentDateStr || new Date().toISOString().split('T')[0];
+
   if (!calendarEvents || calendarEvents.length === 0 || !performers || performers.length === 0) {
-    return { updatedRecords: existingRecords.filter(r => isRehearsalDay(r.date, r.day)), addedCount: 0 };
+    return { updatedRecords: existingRecords.filter(r => isRehearsalDay(r.date, r.day) && r.date <= todayStr), addedCount: 0 };
   }
 
   const recordMap = new Map<string, AttendanceRecord>();
   existingRecords
-    .filter(r => isRehearsalDay(r.date, r.day))
+    .filter(r => isRehearsalDay(r.date, r.day) && r.date <= todayStr)
     .forEach(r => {
       const normDate = normalizeDateString(r.date);
       const emailLower = (r.performerEmail || '').toLowerCase().trim();
@@ -147,7 +150,8 @@ export function populateMissingRehearsalDates(
 
   calendarEvents.forEach(evt => {
     const eventDate = normalizeDateString(evt.date);
-    if (!eventDate || eventDate < baselineDate || !isRehearsalDay(eventDate)) return;
+    // Ignore events before baselineDate, non-rehearsal days, OR events in the FUTURE (> todayStr)
+    if (!eventDate || eventDate < baselineDate || eventDate > todayStr || !isRehearsalDay(eventDate)) return;
 
     // Build map of attendee email -> RSVP status from Google Calendar event if available
     const attendeeRsvpMap = new Map<string, 'Yes' | 'No' | 'Maybe' | 'Awaiting'>();
@@ -163,7 +167,7 @@ export function populateMissingRehearsalDates(
       });
     }
 
-    // Calculate Month Key e.g. "April 2026"
+    // Calculate Month Key e.g. "August 2026"
     let monthKey = '';
     try {
       const parts = eventDate.split('-').map(Number);
@@ -172,9 +176,9 @@ export function populateMissingRehearsalDates(
         monthKey = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       }
     } catch {
-      monthKey = 'April 2026';
+      monthKey = 'August 2026';
     }
-    if (!monthKey) monthKey = 'April 2026';
+    if (!monthKey) monthKey = 'August 2026';
 
     let dayOfWeek = 'Mon';
     try {
@@ -205,12 +209,11 @@ export function populateMissingRehearsalDates(
           fees: rsvpVal === 'Yes' ? 5 : (feeRules.unconfirmedFee ?? 5),
           notes: calRsvp 
             ? `Auto-populated from Google Calendar (RSVP: ${calRsvp})` 
-            : `Auto-populated from Google Calendar ID: ${DEFAULT_CALENDAR_ID}`,
+            : `Past practice record (Date: ${eventDate})`,
           monthKey
         });
         addedCount++;
       } else if (calRsvp && calRsvp !== existing.rsvp) {
-        // Update RSVP status if calendar provides updated response status
         recordMap.set(key, {
           ...existing,
           rsvp: calRsvp,

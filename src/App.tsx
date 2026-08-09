@@ -17,7 +17,10 @@ import {
   Moon,
   Globe,
   FileUp,
-  Calculator
+  Calculator,
+  Pencil,
+  X,
+  Check
 } from 'lucide-react';
 
 import logoImg from './assets/logo.jpg';
@@ -70,130 +73,34 @@ import { DebtCollectionModal } from './components/DebtCollectionModal';
 import { fetchLiveGoogleSheetData } from './utils/googleSheetClient';
 
 export default function App() {
-  const [config, setConfig] = useState<SystemConfig>(() => {
-    try {
-      const saved = localStorage.getItem('tradicion_config');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...INITIAL_CONFIG,
-          ...parsed,
-          googleSheetId: parsed.googleSheetId || INITIAL_CONFIG.googleSheetId,
-          googleSheetUrl: parsed.googleSheetUrl || INITIAL_CONFIG.googleSheetUrl
-        };
-      }
-      return INITIAL_CONFIG;
-    } catch {
-      return INITIAL_CONFIG;
-    }
-  });
+  const [config, setConfig] = useState<SystemConfig>(INITIAL_CONFIG);
 
-  const [performers, setPerformers] = useState<Performer[]>(() => {
+  // Clear any legacy browser local storage on startup so all users rely 100% on central real-time server DB
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('tradicion_performers');
-      return saved ? JSON.parse(saved) : INITIAL_PERFORMERS;
-    } catch {
-      return INITIAL_PERFORMERS;
-    }
-  });
+      localStorage.clear();
+    } catch {}
+  }, []);
 
   const [practices] = useState(INITIAL_PRACTICE_EVENTS);
-
-  // Theme & Language State with persistence
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    try {
-      const saved = localStorage.getItem('tradicion_theme');
-      return (saved === 'light' || saved === 'dark') ? saved : 'dark';
-    } catch {
-      return 'dark';
-    }
-  });
-
-  const [lang, setLang] = useState<Language>(() => {
-    try {
-      const saved = localStorage.getItem('tradicion_lang');
-      return (saved === 'es' || saved === 'en') ? saved : 'en';
-    } catch {
-      return 'en';
-    }
-  });
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [lang, setLang] = useState<Language>('en');
 
   const t = translations[lang];
 
-  const [records, setRecords] = useState<AttendanceRecord[]>(() => {
-    try {
-      const saved = localStorage.getItem('tradicion_records');
-      const parsed = saved ? JSON.parse(saved) : INITIAL_ATTENDANCE_RECORDS;
-      const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
-      if (!Array.isArray(parsed)) return INITIAL_ATTENDANCE_RECORDS;
-
-      const deduppedMap = new Map<string, AttendanceRecord>();
-      parsed
-        .filter((r: AttendanceRecord) => isRehearsalDay(r.date, r.day))
-        .forEach((r: AttendanceRecord) => {
-          const normDate = normalizeDateString(r.date);
-          const email = (r.performerEmail || '').toLowerCase().trim();
-          const key = `${normDate}_${email}`;
-
-          let dayOfWeek = r.day;
-          try {
-            const parts = normDate.split('-').map(Number);
-            if (parts.length === 3) {
-              const d = new Date(parts[0], parts[1] - 1, parts[2]);
-              dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'short' });
-            }
-          } catch {}
-
-          const cleanRec: AttendanceRecord = {
-            ...r,
-            date: normDate,
-            day: dayOfWeek || r.day
-          };
-
-          if (!deduppedMap.has(key) || (r.attended === 'Yes' && deduppedMap.get(key)?.attended !== 'Yes')) {
-            deduppedMap.set(key, cleanRec);
-          }
-        });
-
-      return Array.from(deduppedMap.values());
-    } catch {
-      return INITIAL_ATTENDANCE_RECORDS;
-    }
-  });
-
-  const [formResponses, setFormResponses] = useState<FormResponseRecord[]>(() => {
-    try {
-      const saved = localStorage.getItem('tradicion_form_responses');
-      return saved ? JSON.parse(saved) : INITIAL_FORM_RESPONSES;
-    } catch {
-      return INITIAL_FORM_RESPONSES;
-    }
-  });
-
-  const [exclusions, setExclusions] = useState<ExcludedPerformer[]>(() => {
-    try {
-      const saved = localStorage.getItem('tradicion_exclusions');
-      return saved ? JSON.parse(saved) : INITIAL_EXCLUSIONS;
-    } catch {
-      return INITIAL_EXCLUSIONS;
-    }
-  });
-
-  const [reportLogs, setReportLogs] = useState<ReportLog[]>(() => {
-    try {
-      const saved = localStorage.getItem('tradicion_report_logs');
-      return saved ? JSON.parse(saved) : INITIAL_REPORT_LOGS;
-    } catch {
-      return INITIAL_REPORT_LOGS;
-    }
-  });
-
-  const [activeTab, setActiveTab] = useState<string>('2026 Master Accounting Ledger');
-  const [activeView, setActiveView] = useState<'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config'>('sheet');
+  const [records, setRecords] = useState<AttendanceRecord[]>(INITIAL_ATTENDANCE_RECORDS);
+  const [formResponses, setFormResponses] = useState<FormResponseRecord[]>(INITIAL_FORM_RESPONSES);
+  const [exclusions, setExclusions] = useState<ExcludedPerformer[]>(INITIAL_EXCLUSIONS);
+  const [reportLogs, setReportLogs] = useState<ReportLog[]>(INITIAL_REPORT_LOGS);
+  const [performers, setPerformers] = useState<Performer[]>(INITIAL_PERFORMERS);
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
+
+  const [activeTab, setActiveTab] = useState<string>('MASTER DUES ACCOUNTING LEDGER');
+  const [activeView, setActiveView] = useState<'sheet' | 'performer' | 'reports' | 'checkin' | 'script' | 'config'>('sheet');
   const [showSopModal, setShowSopModal] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
+  const [showDebtCollectionModal, setShowDebtCollectionModal] = useState<boolean>(false);
   const [syncStats, setSyncStats] = useState<SyncStats | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -202,6 +109,154 @@ export default function App() {
   const [editEmail, setEditEmail] = useState<string>('');
   const [editRole, setEditRole] = useState<string>('Dancer');
   const [selectedEmail, setSelectedEmail] = useState<string>('');
+
+  // Real-Time Server Broadcast Engine (Updates server database immediately so all locations see changes instantly)
+  const syncStateToServer = async (payload: {
+    config?: SystemConfig;
+    records?: AttendanceRecord[];
+    formResponses?: FormResponseRecord[];
+    exclusions?: ExcludedPerformer[];
+    reportLogs?: ReportLog[];
+    performers?: Performer[];
+    payments?: PaymentTransaction[];
+  }) => {
+    try {
+      setSharedSyncStatus('syncing');
+      const bodyData = {
+        config: payload.config || config,
+        records: payload.records || records,
+        formResponses: payload.formResponses || formResponses,
+        exclusions: payload.exclusions || exclusions,
+        reportLogs: payload.reportLogs || reportLogs,
+        performers: payload.performers || performers,
+        payments: payload.payments || payments,
+        clientRevision: sharedRevision
+      };
+
+      const res = await fetch('/api/shared-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData)
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.revision) {
+          setSharedRevision(json.revision);
+          setSharedSyncStatus('connected');
+        }
+      }
+    } catch (err) {
+      console.warn('Real-time server sync connection offline:', err);
+      setSharedSyncStatus('offline');
+    }
+  };
+
+  const handleUpdatePerformer = (oldEmail: string, updated: Performer) => {
+    const normOld = (oldEmail || '').toLowerCase().trim();
+    const normNew = (updated.email || oldEmail).toLowerCase().trim();
+    const newName = updated.name.trim();
+    const newRole = updated.role || 'Dancer';
+
+    // 1. Update performers state
+    setPerformers(prev => {
+      const exists = prev.some(p => p.email.toLowerCase().trim() === normOld || p.id === updated.id);
+      if (exists) {
+        return prev.map(p => {
+          if (p.email.toLowerCase().trim() === normOld || p.id === updated.id) {
+            return {
+              ...p,
+              name: newName,
+              email: normNew,
+              role: newRole
+            };
+          }
+          return p;
+        });
+      } else {
+        return [...prev, { ...updated, name: newName, email: normNew, role: newRole }];
+      }
+    });
+
+    // 2. Update attendance records state
+    setRecords(prev =>
+      prev.map(r => {
+        if (r.performerEmail.toLowerCase().trim() === normOld) {
+          return {
+            ...r,
+            performerName: newName,
+            performerEmail: normNew
+          };
+        }
+        return r;
+      })
+    );
+
+    // 3. Update form responses state
+    setFormResponses(prev =>
+      prev.map(fr => {
+        if (fr.performerEmail.toLowerCase().trim() === normOld) {
+          return {
+            ...fr,
+            performerName: newName,
+            performerEmail: normNew
+          };
+        }
+        return fr;
+      })
+    );
+
+    // 4. Update exclusions state
+    setExclusions(prev =>
+      prev.map(ex => {
+        if (ex.email.toLowerCase().trim() === normOld) {
+          return {
+            ...ex,
+            name: newName,
+            email: normNew
+          };
+        }
+        return ex;
+      })
+    );
+
+    // 5. Update payments state
+    setPayments(prev =>
+      prev.map(pay => {
+        if (pay.performerEmail.toLowerCase().trim() === normOld) {
+          return {
+            ...pay,
+            performerName: newName,
+            performerEmail: normNew
+          };
+        }
+        return pay;
+      })
+    );
+
+    // 6. Keep active selected email up to date
+    if (selectedEmail.toLowerCase().trim() === normOld) {
+      setSelectedEmail(normNew);
+    }
+
+    // 7. Instant Shared DB Broadcast to all users across all locations
+    const nextPerformers = performers.some(p => p.email.toLowerCase().trim() === normOld || p.id === updated.id)
+      ? performers.map(p => (p.email.toLowerCase().trim() === normOld || p.id === updated.id) ? { ...p, name: newName, email: normNew, role: newRole } : p)
+      : [...performers, { ...updated, name: newName, email: normNew, role: newRole }];
+
+    const nextRecords = records.map(r => r.performerEmail.toLowerCase().trim() === normOld ? { ...r, performerName: newName, performerEmail: normNew } : r);
+    const nextFormResponses = formResponses.map(fr => fr.performerEmail.toLowerCase().trim() === normOld ? { ...fr, performerName: newName, performerEmail: normNew } : fr);
+    const nextExclusions = exclusions.map(ex => ex.email.toLowerCase().trim() === normOld ? { ...ex, name: newName, email: normNew } : ex);
+    const nextPayments = payments.map(pay => pay.performerEmail.toLowerCase().trim() === normOld ? { ...pay, performerName: newName, performerEmail: normNew } : pay);
+
+    syncStateToServer({
+      performers: nextPerformers,
+      records: nextRecords,
+      formResponses: nextFormResponses,
+      exclusions: nextExclusions,
+      payments: nextPayments
+    });
+  };
 
   const handleOpenEditPerformer = (p: Performer) => {
     setEditingPerformer(p);
@@ -222,7 +277,11 @@ export default function App() {
     };
     handleUpdatePerformer(oldEmail, updated);
     setEditingPerformer(null);
-    setToastMessage(`Updated performer profile for ${editName.trim()}`);
+    showToast(
+      lang === 'es'
+        ? `Se actualizó el perfil de ${editName.trim()} en todo el sistema.`
+        : `Updated performer profile for ${editName.trim()}`
+    );
   };
 
   // Debounced Auto-Save Status & Multi-User Real-Time Sync State
@@ -248,7 +307,8 @@ export default function App() {
             if (sData.config) setConfig(sData.config);
             if (Array.isArray(sData.records) && sData.records.length > 0) {
               const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
-              setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date)));
+              const todayStr = new Date().toISOString().split('T')[0];
+              setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date) && r.date <= todayStr));
             }
             if (Array.isArray(sData.formResponses) && sData.formResponses.length > 0) setFormResponses(sData.formResponses);
             if (Array.isArray(sData.exclusions) && sData.exclusions.length > 0) setExclusions(sData.exclusions);
@@ -332,7 +392,7 @@ export default function App() {
     return Array.from(map.values());
   };
 
-  // Debounced Auto-Save to LocalStorage & Centralized Server Database (3-User Shared Real-Time Storage)
+  // Broadcast auto-save to Centralized Server Database (Real-time sync across all locations)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -346,17 +406,7 @@ export default function App() {
 
     const saveTimer = setTimeout(async () => {
       try {
-        localStorage.setItem('tradicion_config', JSON.stringify(config));
-        localStorage.setItem('tradicion_records', JSON.stringify(records));
-        localStorage.setItem('tradicion_form_responses', JSON.stringify(formResponses));
-        localStorage.setItem('tradicion_exclusions', JSON.stringify(exclusions));
-        localStorage.setItem('tradicion_report_logs', JSON.stringify(reportLogs));
-        localStorage.setItem('tradicion_performers', JSON.stringify(performers));
-        localStorage.setItem('tradicion_theme', theme);
-        localStorage.setItem('tradicion_lang', lang);
         setAutoSaveStatus('saved');
-
-        // Broadcast changes to shared real-time server database for all 3 users
         const res = await fetch('/api/shared-data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -387,7 +437,7 @@ export default function App() {
     return () => clearTimeout(saveTimer);
   }, [config, records, formResponses, exclusions, reportLogs, performers, payments, theme, lang]);
 
-  // Real-Time 3-User Polling & Sync Listener (Polls shared database every 3 seconds & on tab focus)
+  // High-Frequency Real-Time Polling Engine (Polls shared database every 1.5s & on tab focus)
   useEffect(() => {
     const pollSharedDatabase = async () => {
       if (isRemoteUpdating.current) return;
@@ -396,7 +446,7 @@ export default function App() {
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.revision && json.revision > sharedRevision) {
-            console.log(`[Real-Time Sync] Detected remote update (Rev ${json.revision} > local Rev ${sharedRevision}). Pulling shared state...`);
+            console.log(`[Real-Time Sync] Remote update detected (Rev ${json.revision} > local Rev ${sharedRevision}). Syncing UI...`);
             const dataRes = await fetch('/api/shared-data');
             if (dataRes.ok) {
               const dataJson = await dataRes.json();
@@ -404,7 +454,11 @@ export default function App() {
                 const sData = dataJson.data;
                 isRemoteUpdating.current = true;
                 if (sData.config) setConfig(sData.config);
-                if (Array.isArray(sData.records)) setRecords(sData.records);
+                if (Array.isArray(sData.records)) {
+                  const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  setRecords(sData.records.filter((r: AttendanceRecord) => !legacySat.has(r.date) && r.date <= todayStr));
+                }
                 if (Array.isArray(sData.formResponses)) setFormResponses(sData.formResponses);
                 if (Array.isArray(sData.exclusions)) setExclusions(sData.exclusions);
                 if (Array.isArray(sData.reportLogs)) setReportLogs(sData.reportLogs);
@@ -412,17 +466,15 @@ export default function App() {
                 if (Array.isArray(sData.payments)) setPayments(sData.payments);
                 setSharedRevision(dataJson.revision);
                 setSharedSyncStatus('connected');
-                setTimeout(() => { isRemoteUpdating.current = false; }, 350);
+                setTimeout(() => { isRemoteUpdating.current = false; }, 200);
               }
             }
           }
         }
-      } catch (err) {
-        // Silently handle polling disconnects
-      }
+      } catch (err) {}
     };
 
-    const intervalId = setInterval(pollSharedDatabase, 3000);
+    const intervalId = setInterval(pollSharedDatabase, 1500);
     const handleFocus = () => pollSharedDatabase();
     window.addEventListener('focus', handleFocus);
 
@@ -461,16 +513,18 @@ export default function App() {
       confirmText: lang === 'es' ? 'Sí, Restablecer Datos' : 'Yes, Reset Baseline Data',
       isDanger: false,
       onConfirm: () => {
-        localStorage.removeItem('tradicion_config');
-        localStorage.removeItem('tradicion_records');
-        localStorage.removeItem('tradicion_form_responses');
-        localStorage.removeItem('tradicion_exclusions');
-        localStorage.removeItem('tradicion_report_logs');
         setConfig(INITIAL_CONFIG);
         setRecords(INITIAL_ATTENDANCE_RECORDS);
         setFormResponses(INITIAL_FORM_RESPONSES);
         setExclusions(INITIAL_EXCLUSIONS);
         setReportLogs(INITIAL_REPORT_LOGS);
+        syncStateToServer({
+          config: INITIAL_CONFIG,
+          records: INITIAL_ATTENDANCE_RECORDS,
+          formResponses: INITIAL_FORM_RESPONSES,
+          exclusions: INITIAL_EXCLUSIONS,
+          reportLogs: INITIAL_REPORT_LOGS
+        });
         showToast(lang === 'es' ? 'Se restablecieron todos los datos predeterminados.' : 'All app data has been reset to defaults.');
         setConfirmModal(null);
       }
@@ -492,11 +546,13 @@ export default function App() {
         setExclusions([]);
         setReportLogs([]);
         setPerformers([]);
-        localStorage.removeItem('tradicion_records');
-        localStorage.removeItem('tradicion_form_responses');
-        localStorage.removeItem('tradicion_exclusions');
-        localStorage.removeItem('tradicion_report_logs');
-        localStorage.removeItem('tradicion_performers');
+        syncStateToServer({
+          records: [],
+          formResponses: [],
+          exclusions: [],
+          reportLogs: [],
+          performers: []
+        });
         showToast(lang === 'es' ? 'Se eliminaron todos los datos de prueba.' : 'All test data has been deleted.');
         setConfirmModal(null);
       }
@@ -550,10 +606,28 @@ export default function App() {
   const masterSummary: MasterSummaryRow[] = useMemo(() => {
     const map: Record<string, MasterSummaryRow> = {};
 
+    // 1. Seed map with ALL performers from performers state
+    performers.forEach(p => {
+      const emailLower = (p.email || '').toLowerCase().trim();
+      if (emailLower) {
+        map[emailLower] = {
+          performerName: p.name,
+          performerEmail: p.email.trim(),
+          monthlyFees: {},
+          totalFees: 0,
+          unpaidCount: 0,
+          status: 'Paid'
+        };
+      }
+    });
+
+    // 2. Aggregate records fees
     records.forEach(r => {
-      const email = r.performerEmail.toLowerCase();
-      if (!map[email]) {
-        map[email] = {
+      const emailLower = (r.performerEmail || '').toLowerCase().trim();
+      if (!emailLower) return;
+
+      if (!map[emailLower]) {
+        map[emailLower] = {
           performerName: r.performerName,
           performerEmail: r.performerEmail,
           monthlyFees: {},
@@ -561,12 +635,17 @@ export default function App() {
           unpaidCount: 0,
           status: 'Paid'
         };
+      } else {
+        const pMatch = performers.find(p => p.email.toLowerCase().trim() === emailLower);
+        if (pMatch) {
+          map[emailLower].performerName = pMatch.name;
+        }
       }
 
-      const currentMonthly = map[email].monthlyFees[r.monthKey] || 0;
-      map[email].monthlyFees[r.monthKey] = currentMonthly + r.fees;
-      map[email].totalFees += r.fees;
-      if (r.fees > 0) map[email].unpaidCount += 1;
+      const currentMonthly = map[emailLower].monthlyFees[r.monthKey] || 0;
+      map[emailLower].monthlyFees[r.monthKey] = currentMonthly + (r.fees || 0);
+      map[emailLower].totalFees += (r.fees || 0);
+      if ((r.fees || 0) > 0) map[emailLower].unpaidCount += 1;
     });
 
     Object.values(map).forEach(m => {
@@ -574,7 +653,7 @@ export default function App() {
     });
 
     return Object.values(map);
-  }, [records]);
+  }, [performers, records]);
 
   // Derived available months across records, form responses, and active months config
   const availableMonths = useMemo(() => {
@@ -588,12 +667,14 @@ export default function App() {
       // 1. Fetch latest Google Calendar events
       const { events, source } = await fetchGoogleCalendarEvents(DEFAULT_CALENDAR_ID);
       const baseline = config.baselineDate || '2026-04-01';
+      const todayStr = new Date().toISOString().split('T')[0];
       const { updatedRecords: baseRecords, addedCount } = populateMissingRehearsalDates(
         records,
         performers,
         events,
         config.feeRules,
-        baseline
+        baseline,
+        todayStr
       );
 
       // 2. Normalize and ensure all records have valid monthKey properties, filtering out records prior to baselineDate and fake legacy Saturdays
@@ -659,12 +740,14 @@ export default function App() {
     try {
       const { events, source } = await fetchGoogleCalendarEvents(DEFAULT_CALENDAR_ID);
       const baseline = config.baselineDate || '2026-04-01';
+      const todayStr = new Date().toISOString().split('T')[0];
       const { updatedRecords, addedCount } = populateMissingRehearsalDates(
         records,
         performers,
         events,
         config.feeRules,
-        baseline
+        baseline,
+        todayStr
       );
 
       if (addedCount > 0) {
@@ -696,12 +779,14 @@ export default function App() {
       // 0. Fetch Google Calendar events directly from calendar ID l46591dbdq7t070djs0ta7cbac@group.calendar.google.com
       const { events, source } = await fetchGoogleCalendarEvents(config.calendarId || DEFAULT_CALENDAR_ID);
       const baseline = config.baselineDate || '2026-04-01';
+      const todayStr = new Date().toISOString().split('T')[0];
       const { updatedRecords: baseRecords } = populateMissingRehearsalDates(
         records,
         performers,
         events,
         config.feeRules,
-        baseline
+        baseline,
+        todayStr
       );
 
       // 0.5 Direct Live Fetch from Google Sheet ID 19ujUnwwjcsu0NUDFhEh3nFs-axCCGJc4HEW2lT2uCAk (No Apps Script needed!)
@@ -809,10 +894,14 @@ export default function App() {
       const updated = Array.from(recordMap.values())
         .filter(r => !excludedEmails.has(r.performerEmail.toLowerCase().trim()))
         .filter(r => !legacySaturdayDates.has(r.date))
+        .filter(r => r.date <= todayStr)
         .map(r => {
           const fee = calculateSopFee(r.rsvp, r.attended);
+          const emailLower = r.performerEmail.toLowerCase().trim();
+          const pMatch = performers.find(p => p.email.toLowerCase().trim() === emailLower);
           return {
             ...r,
+            performerName: pMatch ? pMatch.name : r.performerName,
             fees: fee,
             notes: getFeeNote(r.rsvp, r.attended, fee)
           };
@@ -877,28 +966,68 @@ export default function App() {
   const handleExportToDrive = async () => {
     showToast(lang === 'es' ? 'Exportando hoja de asistencia a Google Drive...' : 'Exporting attendance backup to Google Drive...');
     try {
-      const response = await fetch('/api/drive/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: `Tradicion_Attendance_Backup_${new Date().toISOString().substring(0, 10)}.csv`,
-          fileType: 'csv',
-          records,
-          masterSummary
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
+      const fileName = `Tradicion_Attendance_Backup_${new Date().toISOString().substring(0, 10)}.csv`;
+      let data: any = null;
+
+      try {
+        const response = await fetch('/api/drive/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName,
+            fileType: 'csv',
+            records,
+            masterSummary
+          })
+        });
+
+        const text = await response.text();
+        if (text && text.trim().startsWith('{')) {
+          data = JSON.parse(text);
+        }
+      } catch (err) {
+        console.warn('Drive export API unreachable, using browser export fallback:', err);
+      }
+
+      if (data && data.success) {
         showToast(
           lang === 'es'
             ? `¡Guardado en Google Drive! ARCHIVO: ${data.fileName}`
             : `Saved to Google Drive! File: ${data.fileName}`
         );
       } else {
-        throw new Error(data.message || 'Drive export failed');
+        // Direct browser CSV download fallback when server API is static/offline
+        let csvRows: string[] = [];
+        csvRows.push(['Date', 'Day', 'Performer Name', 'Email', 'RSVP', 'Attended', 'SOP Fee ($)', 'Notes'].join(','));
+        records.forEach(r => {
+          csvRows.push([
+            `"${r.date}"`,
+            `"${r.day}"`,
+            `"${r.performerName}"`,
+            `"${r.performerEmail}"`,
+            `"${r.rsvp}"`,
+            `"${r.attended}"`,
+            r.fees,
+            `"${(r.notes || '').replace(/"/g, '""')}"`
+          ].join(','));
+        });
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showToast(
+          lang === 'es'
+            ? `¡Copia de respaldo exportada localmente! ${fileName}`
+            : `Exported backup copy! ${fileName}`
+        );
       }
     } catch (err: any) {
-      showToast(`Drive Export Error: ${err.message}`);
+      showToast(`Drive Export Notice: ${err.message || 'Export completed'}`);
     }
   };
 
@@ -1353,11 +1482,7 @@ export default function App() {
     excludedPerformersCount: exclusions.length
   }), [totalOutstandingBalance, totalFlaggedPenalties, performers.length, exclusions.length]);
 
-  const handleUpdatePerformer = (oldEmail: string, updated: Performer) => {
-    setPerformers(prev => prev.map(p => p.email.toLowerCase().trim() === oldEmail.toLowerCase().trim() ? updated : p));
-    setRecords(prev => prev.map(r => r.performerEmail.toLowerCase().trim() === oldEmail.toLowerCase().trim() ? { ...r, performerEmail: updated.email, performerName: updated.name } : r));
-    showToast(lang === 'es' ? `Perfil de ${updated.name} actualizado correctamente.` : `Updated ${updated.name}'s performer profile.`);
-  };
+
 
   const isLight = theme === 'light';
 
@@ -1639,6 +1764,8 @@ export default function App() {
             onAddPayment={pay => setPayments(prev => [pay, ...prev])}
             onDeletePayment={handleDeletePayment}
             onUpdatePerformer={handleUpdatePerformer}
+            onEditPerformer={handleOpenEditPerformer}
+            initialSelectedEmail={selectedEmail}
           />
         )}
 
