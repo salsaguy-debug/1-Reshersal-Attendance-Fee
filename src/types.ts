@@ -20,6 +20,7 @@ export interface AttendanceRecord {
   attended: AttendedStatus;
   fees: number;
   notes?: string;
+  isUserModified?: boolean;
 }
 
 export interface MasterSummaryRow {

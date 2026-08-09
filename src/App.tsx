@@ -891,14 +891,19 @@ export default function App() {
         } catch {}
 
         if (existingRec) {
-          const finalRsvp = (frRsvp && frRsvp !== 'Awaiting') ? frRsvp : existingRec.rsvp;
-          const fee = calculateSopFee(finalRsvp, checkInAttended, existingRec.date);
+          const finalRsvp = existingRec.isUserModified 
+            ? existingRec.rsvp 
+            : ((frRsvp && frRsvp !== 'Awaiting') ? frRsvp : existingRec.rsvp);
+          const finalAttended = existingRec.isUserModified 
+            ? existingRec.attended 
+            : checkInAttended;
+          const fee = calculateSopFee(finalRsvp, finalAttended, existingRec.date);
           recordMap.set(key, {
             ...existingRec,
             rsvp: finalRsvp,
-            attended: checkInAttended,
+            attended: finalAttended,
             fees: fee,
-            notes: getFeeNote(finalRsvp, checkInAttended, fee, existingRec.date)
+            notes: existingRec.isUserModified ? existingRec.notes : getFeeNote(finalRsvp, finalAttended, fee, existingRec.date)
           });
         } else {
           const finalRsvp = frRsvp;
@@ -931,7 +936,7 @@ export default function App() {
             ...r,
             performerName: pMatch ? pMatch.name : r.performerName,
             fees: fee,
-            notes: getFeeNote(r.rsvp, r.attended, fee, r.date)
+            notes: r.isUserModified ? r.notes : getFeeNote(r.rsvp, r.attended, fee, r.date)
           };
         });
 
@@ -1070,12 +1075,17 @@ export default function App() {
             rsvp: newRsvp,
             attended: newAttended,
             fees: fee,
+            isUserModified: true,
             notes: getFeeNote(newRsvp, newAttended, fee, r.date)
           };
         }
         return r;
       });
       setPerformers(p => derivePerformersList(p, updated, formResponses));
+      try {
+        localStorage.setItem('rehearsal_attendance_records', JSON.stringify(updated));
+      } catch {}
+      syncStateToServer({ records: updated });
       return updated;
     });
   };
@@ -1090,18 +1100,23 @@ export default function App() {
         if (idSet.has(r.id)) {
           const nextRsvp = updates.rsvp !== undefined ? updates.rsvp : r.rsvp;
           const nextAttended = updates.attended !== undefined ? updates.attended : r.attended;
-          const fee = calculateSopFee(nextRsvp, nextAttended);
+          const fee = calculateSopFee(nextRsvp, nextAttended, r.date);
           return {
             ...r,
             rsvp: nextRsvp,
             attended: nextAttended,
             fees: fee,
-            notes: getFeeNote(nextRsvp, nextAttended, fee)
+            isUserModified: true,
+            notes: getFeeNote(nextRsvp, nextAttended, fee, r.date)
           };
         }
         return r;
       });
       setPerformers(p => derivePerformersList(p, updated, formResponses));
+      try {
+        localStorage.setItem('rehearsal_attendance_records', JSON.stringify(updated));
+      } catch {}
+      syncStateToServer({ records: updated });
       return updated;
     });
     showToast(
