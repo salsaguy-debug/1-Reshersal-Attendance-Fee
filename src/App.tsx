@@ -292,6 +292,7 @@ export default function App() {
   const [sharedRevision, setSharedRevision] = useState<number>(1);
   const isFirstRender = useRef(true);
   const isRemoteUpdating = useRef(false);
+  const lastMutationTimeRef = useRef<number>(0);
 
   // Initial Boot Sync & Background Auto-Sync Engine
   useEffect(() => {
@@ -339,9 +340,9 @@ export default function App() {
     const legacySat = new Set(['2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25']);
     setRecords(prev => prev.filter(r => !legacySat.has(r.date)));
 
-    // 15-second background auto-sync timer for multi-browser real-time parity
+    // 15-second background auto-sync timer for multi-browser real-time parity (Paused during local editing)
     const syncInterval = setInterval(() => {
-      if (isSubscribed) {
+      if (isSubscribed && Date.now() - lastMutationTimeRef.current >= 10000) {
         runSyncAlgorithm({ silent: true });
       }
     }, 15000);
@@ -802,6 +803,13 @@ export default function App() {
 
   // Sync All Data (Rev 7.4) algorithm simulation
   const runSyncAlgorithm = async (options?: { silent?: boolean }) => {
+    // Solution 2: Pause background sync while user is mutating or if mutation occurred in the last 10 seconds
+    const timeSinceMutation = Date.now() - lastMutationTimeRef.current;
+    if (options?.silent && timeSinceMutation < 10000) {
+      console.log('Skipping background sync during active user mutation / local edit window.');
+      return;
+    }
+
     setIsSyncing(true);
 
     try {
@@ -1066,6 +1074,7 @@ export default function App() {
 
   // Record Handlers
   const handleUpdateRecord = (id: string, newRsvp: RsvpStatus, newAttended: AttendedStatus) => {
+    lastMutationTimeRef.current = Date.now();
     setRecords(prev => {
       const updated = prev.map(r => {
         if (r.id === id) {
@@ -1094,6 +1103,7 @@ export default function App() {
     ids: string[],
     updates: { rsvp?: RsvpStatus; attended?: AttendedStatus }
   ) => {
+    lastMutationTimeRef.current = Date.now();
     const idSet = new Set(ids);
     setRecords(prev => {
       const updated = prev.map(r => {
