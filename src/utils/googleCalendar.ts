@@ -39,11 +39,17 @@ export async function fetchGoogleCalendarEvents(
     console.warn('Backend calendar API unreachable, attempting direct client-side iCal feed fetch:', err);
   }
 
-  // Direct Client-Side Fallback: Fetch Public Google Calendar iCal (.ics) Feed
+  // Direct Client-Side Fallback: Fetch Public Google Calendar iCal (.ics) Feed (with CORS Proxy fallback)
   try {
-    const icalUrl = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`;
-    const response = await fetch(icalUrl);
-    if (response.ok) {
+    const rawIcalUrl = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`;
+    let response: Response | null = null;
+    try {
+      response = await fetch(rawIcalUrl);
+    } catch {
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawIcalUrl)}`;
+      response = await fetch(proxyUrl);
+    }
+    if (response && response.ok) {
       const icalText = await response.text();
       const events: CalendarEvent[] = [];
 
