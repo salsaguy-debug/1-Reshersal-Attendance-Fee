@@ -731,13 +731,13 @@ SOP Compliance Engine Rev 7.4`;
                               : isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-800/40'
                           }`}>
                             {/* Date & Month */}
-                            <td className="p-3 font-mono font-semibold text-slate-200">
+                            <td className={`p-3 font-mono font-extrabold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                               {rec.date}
-                              <span className="text-[10px] block font-normal text-slate-400">{rec.monthKey}</span>
+                              <span className={`text-[10px] block font-semibold ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{rec.monthKey}</span>
                             </td>
 
                             {/* Day */}
-                            <td className="p-3 font-mono text-slate-400">{rec.day}</td>
+                            <td className={`p-3 font-mono font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{rec.day}</td>
 
                             {/* RSVP Status dropdown */}
                             <td className="p-3">
@@ -747,14 +747,14 @@ SOP Compliance Engine Rev 7.4`;
                                   name={`performerRsvp_${rec.id}`}
                                   value={rec.rsvp}
                                   onChange={e => onUpdateRecord(rec.id, e.target.value as RsvpStatus, rec.attended)}
-                                  className={`border rounded-md px-2 py-1 font-bold text-xs focus:outline-none cursor-pointer ${
+                                  className={`border rounded-md px-2 py-1 font-extrabold text-xs focus:outline-none cursor-pointer transition-colors shadow-xs ${
                                     rec.rsvp === 'Yes'
-                                      ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700'
+                                      ? isLight ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-emerald-950/80 text-emerald-300 border-emerald-700'
                                       : rec.rsvp === 'No'
-                                      ? 'bg-sky-950/80 text-sky-300 border-sky-700'
+                                      ? isLight ? 'bg-sky-100 text-sky-900 border-sky-300' : 'bg-sky-950/80 text-sky-300 border-sky-700'
                                       : rec.rsvp === 'Maybe'
-                                      ? 'bg-amber-950/80 text-amber-300 border-amber-700'
-                                      : 'bg-slate-900 text-slate-300 border-slate-700'
+                                      ? isLight ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-amber-950/80 text-amber-300 border-amber-700'
+                                      : isLight ? 'bg-slate-900 text-white border-slate-950 font-extrabold shadow-md' : 'bg-slate-900 text-slate-300 border-slate-700'
                                   }`}
                                 >
                                   <option value="Yes">✓ Yes (Confirmed)</option>
@@ -763,7 +763,7 @@ SOP Compliance Engine Rev 7.4`;
                                   <option value="Awaiting">⧖ Awaiting (Pending)</option>
                                 </select>
                               ) : (
-                                <span className="font-semibold">{rec.rsvp}</span>
+                                <span className={`font-extrabold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{rec.rsvp}</span>
                               )}
                             </td>
 
@@ -775,44 +775,52 @@ SOP Compliance Engine Rev 7.4`;
                                   name={`performerAttended_${rec.id}`}
                                   value={rec.attended}
                                   onChange={e => onUpdateRecord(rec.id, rec.rsvp, e.target.value as AttendedStatus)}
-                                  className={`border rounded-md px-2 py-1 font-bold text-xs focus:outline-none cursor-pointer ${
+                                  className={`border rounded-md px-2 py-1 font-extrabold text-xs focus:outline-none cursor-pointer transition-colors shadow-xs ${
                                     rec.attended === 'Yes'
-                                      ? 'bg-emerald-900/80 text-emerald-200 border-emerald-600'
-                                      : 'bg-rose-900/80 text-rose-200 border-rose-600'
+                                      ? isLight ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-emerald-900/80 text-emerald-200 border-emerald-600'
+                                      : isLight ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-rose-900/80 text-rose-200 border-rose-600'
                                   }`}
                                 >
                                   <option value="Yes">✓ Yes (Present)</option>
                                   <option value="No">⚠ No (Absent)</option>
                                 </select>
                               ) : (
-                                <span className="font-semibold">{rec.attended}</span>
+                                <span className={`font-extrabold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{rec.attended}</span>
                               )}
                             </td>
 
                             {/* SOP Fee Amount */}
-                            <td className={`p-3 font-mono font-bold text-right text-xs ${
-                              rec.fees > 0 ? 'text-rose-400 font-black' : 'text-emerald-400'
+                            <td className={`p-3 font-mono font-black text-right text-xs ${
+                              rec.fees > 0 
+                                ? (isLight ? 'text-rose-700 font-extrabold' : 'text-rose-400 font-extrabold') 
+                                : (isLight ? 'text-emerald-700 font-extrabold' : 'text-emerald-400 font-extrabold')
                             }`}>
                               ${rec.fees.toFixed(2)}
                             </td>
 
                             {/* Rule / Reason */}
-                            <td className="p-3 text-slate-300 text-xs">
+                            <td className={`p-3 text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
                               {rec.notes || (rec.fees > 0 ? 'SOP Penalty Fee' : 'Verified Attendance')}
                             </td>
 
                             {/* Status Badge */}
                             <td className="p-3 text-center">
                               {currentSummary.isExcluded ? (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                  isLight ? 'bg-slate-200 text-slate-700 border border-slate-300' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                }`}>
                                   🛡️ Excluded
                                 </span>
                               ) : rec.fees > 0 ? (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                  isLight ? 'bg-rose-100 text-rose-900 border border-rose-300' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                }`}>
                                   ! Due ($5)
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                  isLight ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                }`}>
                                   ✓ Clear
                                 </span>
                               )}
