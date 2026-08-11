@@ -37,6 +37,7 @@ import {
   AttendedStatus
 } from '../types';
 import { Language, translations, translateMonthStr, getTabDisplayName } from '../utils/translations';
+import { formatDisplayDate } from '../utils/monthUtils';
 
 interface SpreadsheetViewProps {
   records: AttendanceRecord[];
@@ -185,31 +186,57 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   const [defaultReason, setDefaultReason] = useState('Leave of Absence / Excluded');
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // Compute unique performer emails for global dropdown
+  // Compute unique performer emails for global dropdown (Alphabetized A-Z & excluding scrubbed performers)
   const allPerformerEmails = useMemo(() => {
+    const excludedSet = new Set(exclusions.map(e => e.email.toLowerCase().trim()));
     const emailMap = new Map<string, string>();
-    records.forEach(r => emailMap.set(r.performerEmail, r.performerName));
-    masterSummary.forEach(m => emailMap.set(m.performerEmail, m.performerName));
-    formResponses.forEach(f => emailMap.set(f.performerEmail, f.performerName));
-    exclusions.forEach(e => emailMap.set(e.email, e.name || e.email));
-    return Array.from(emailMap.entries()).map(([email, name]) => ({ email, name }));
-  }, [records, masterSummary, formResponses, exclusions]);
+    records.forEach(r => {
+      const emailLower = r.performerEmail.toLowerCase().trim();
+      if (!excludedSet.has(emailLower)) emailMap.set(r.performerEmail, r.performerName);
+    });
+    masterSummary.forEach(m => {
+      const emailLower = m.performerEmail.toLowerCase().trim();
+      if (!excludedSet.has(emailLower)) emailMap.set(m.performerEmail, m.performerName);
+    });
+    formResponses.forEach(f => {
+      const emailLower = f.performerEmail.toLowerCase().trim();
+      if (!excludedSet.has(emailLower)) emailMap.set(f.performerEmail, f.performerName);
+    });
+    performers.forEach(p => {
+      const emailLower = p.email.toLowerCase().trim();
+      if (!excludedSet.has(emailLower) && !p.excluded && p.role !== 'Excluded (Blocklist)') {
+        emailMap.set(p.email, p.name);
+      }
+    });
 
-  // Filtered Master Summary Rows
+    return Array.from(emailMap.entries())
+      .map(([email, name]) => ({ email, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [records, masterSummary, formResponses, exclusions, performers]);
+
+  // Filtered Master Summary Rows (Excludes scrubbed performers)
   const filteredMasterRows = useMemo(() => {
+    const excludedSet = new Set(exclusions.map(e => e.email.toLowerCase().trim()));
     return masterSummary.filter(row => {
+      const emailLower = row.performerEmail.toLowerCase().trim();
+      if (excludedSet.has(emailLower)) return false;
+
       const matchSearch =
         row.performerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         row.performerEmail.toLowerCase().includes(searchTerm.toLowerCase());
       const matchEmail = selectedEmailFilter ? row.performerEmail === selectedEmailFilter : true;
       return matchSearch && matchEmail;
     });
-  }, [masterSummary, searchTerm, selectedEmailFilter]);
+  }, [masterSummary, searchTerm, selectedEmailFilter, exclusions]);
 
-  // Filtered Monthly Attendance Records
+  // Filtered Monthly Attendance Records (Excludes scrubbed performers)
   const filteredMonthlyRecords = useMemo(() => {
     if (!availableMonths.includes(activeTab)) return [];
+    const excludedSet = new Set(exclusions.map(e => e.email.toLowerCase().trim()));
     return records.filter(rec => {
+      const emailLower = rec.performerEmail.toLowerCase().trim();
+      if (excludedSet.has(emailLower)) return false;
+
       const recMonth = rec.monthKey || (rec as any).monthTab || '';
       const matchMonth = recMonth === activeTab;
       const matchSearch =
@@ -221,7 +248,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
       const matchAttended = attendedFilter === 'ALL' ? true : rec.attended === attendedFilter;
       return matchMonth && matchSearch && matchEmail && matchRsvp && matchAttended;
     });
-  }, [records, activeTab, availableMonths, searchTerm, selectedEmailFilter, rsvpFilter, attendedFilter]);
+  }, [records, activeTab, availableMonths, searchTerm, selectedEmailFilter, rsvpFilter, attendedFilter, exclusions]);
 
   // Filtered Form Responses
   const filteredFormResponses = useMemo(() => {
@@ -997,24 +1024,6 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onInspectPerformer) {
-                                  onInspectPerformer(row.performerEmail);
-                                } else if (setActiveView) {
-                                  setActiveView('performer');
-                                }
-                              }}
-                              className={`p-1 rounded transition-colors border ${
-                                isLight
-                                  ? 'bg-slate-100 hover:bg-indigo-100 border-slate-300 text-slate-600 hover:text-indigo-700'
-                                  : 'bg-slate-900 hover:bg-indigo-950 border-slate-800 text-slate-400 hover:text-indigo-300'
-                              }`}
-                              title={isEs ? `👁️ Inspeccionar expediente de ${row.performerName}` : `👁️ Inspect ${row.performerName}'s ledger`}
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
                           </div>
                         </td>
                         <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{row.performerEmail}</td>
@@ -1293,25 +1302,6 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          {/* 👁️ Eye Inspect Icon */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onInspectPerformer) {
-                                onInspectPerformer(mRow.performerEmail);
-                              } else if (setActiveView) {
-                                setActiveView('performer');
-                              }
-                            }}
-                            className={`p-1.5 rounded-lg border transition-colors ${
-                              isLight
-                                ? 'bg-slate-100 hover:bg-purple-100 border-slate-300 text-slate-600 hover:text-purple-700'
-                                : 'bg-slate-900 hover:bg-purple-950 border-slate-800 text-slate-400 hover:text-purple-300'
-                            }`}
-                            title={isEs ? `👁️ Auditoría / Drill-Down de ${mRow.performerName}` : `👁️ Audit Drill-Down for ${mRow.performerName}`}
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
                         </div>
                       </td>
 
@@ -1320,18 +1310,18 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                         {mRow.performerEmail}
                       </td>
 
-                      {/* STATUS */}
-                      <td className="p-3 text-center font-bold">
+                      {/* STATUS - Single Line Layout */}
+                      <td className="p-3 text-center font-bold whitespace-nowrap">
                         {isExcluded ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 whitespace-nowrap inline-flex items-center gap-1">
                             🛡️ {isEs ? 'Excluido' : 'Excluded'}
                           </span>
                         ) : netOwed > 0 ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 whitespace-nowrap inline-flex items-center gap-1">
                             ⚠️ {isEs ? 'Pendiente' : 'Outstanding'}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap inline-flex items-center gap-1">
                             🟢 {isEs ? 'Al Día' : 'Current'}
                           </span>
                         )}
@@ -1451,7 +1441,7 @@ david.lopez@example.com, David Lopez, Academic Exemption`;
                           className="rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                         />
                       </td>
-                      <td className={`p-3 font-mono ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{rec.date}</td>
+                      <td className={`p-3 font-mono ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{formatDisplayDate(rec.date)}</td>
                       <td className={`p-3 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{rec.day}</td>
                       <td className={`p-3 font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{rec.performerName}</td>
                       <td className={`p-3 font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{rec.performerEmail}</td>

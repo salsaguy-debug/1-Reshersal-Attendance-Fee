@@ -5,8 +5,9 @@ export interface Performer {
   id: string;
   name: string;
   email: string;
-  role: 'Dancer' | 'Lead' | 'Soloist' | 'Apprentice' | 'Choreographer';
+  role: 'Dancer' | 'Lead' | 'Soloist' | 'Apprentice' | 'Choreographer' | 'Excluded (Blocklist)';
   phone?: string;
+  excluded?: boolean;
 }
 
 export interface AttendanceRecord {

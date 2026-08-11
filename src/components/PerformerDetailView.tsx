@@ -29,6 +29,7 @@ import {
   SystemConfig
 } from '../types';
 import { Language, translateMonthStr } from '../utils/translations';
+import { formatDisplayDate } from '../utils/monthUtils';
 
 export interface PaymentTransaction {
   id: string;
@@ -182,7 +183,7 @@ export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
     return map;
   }, [performers, records, payments, excludedEmailSet]);
 
-  // Filtered Performer Directory
+  // Filtered Performer Directory (Scrubbed / excluded performers hidden by default)
   const filteredPerformers = useMemo(() => {
     return performers.filter(p => {
       const emailLower = p.email.toLowerCase().trim();
@@ -196,11 +197,12 @@ export const PerformerDetailView: React.FC<PerformerDetailViewProps> = ({
       if (!matchesSearch) return false;
 
       // Category filter
-      if (directoryFilter === 'owed') return (summary?.netOwed || 0) > 0;
+      if (directoryFilter === 'owed') return (summary?.netOwed || 0) > 0 && !summary?.isExcluded;
       if (directoryFilter === 'good') return (summary?.netOwed || 0) === 0 && !summary?.isExcluded;
       if (directoryFilter === 'excluded') return summary?.isExcluded;
 
-      return true;
+      // Default ('all'): exclude scrubbed performers
+      return !summary?.isExcluded;
     });
   }, [performers, searchTerm, directoryFilter, performerSummaries]);
 
@@ -735,7 +737,7 @@ SOP Compliance Engine Rev 7.4`;
 
                             {/* Column 2: Practice Date & Day */}
                             <td className={`p-3 font-mono font-extrabold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                              {rec.date} ({rec.day})
+                              {formatDisplayDate(rec.date)} ({rec.day})
                               <span className={`text-[10px] block font-semibold ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{rec.monthKey}</span>
                             </td>
 

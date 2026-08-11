@@ -84,7 +84,7 @@ export default function App() {
   }, []);
 
   const [practices] = useState(INITIAL_PRACTICE_EVENTS);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
   const [lang, setLang] = useState<Language>('en');
 
   const t = translations[lang];
@@ -439,10 +439,11 @@ export default function App() {
     return () => clearTimeout(saveTimer);
   }, [config, records, formResponses, exclusions, reportLogs, performers, payments, theme, lang]);
 
-  // High-Frequency Real-Time Polling Engine (Polls shared database every 1.5s & on tab focus)
+  // High-Frequency Real-Time Polling Engine (Polls shared database every 1.5s & on tab focus - paused during local editing)
   useEffect(() => {
     const pollSharedDatabase = async () => {
       if (isRemoteUpdating.current) return;
+      if (Date.now() - lastMutationTimeRef.current < 10000) return;
       try {
         const res = await fetch('/api/shared-data/status');
         if (res.ok) {

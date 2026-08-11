@@ -260,11 +260,17 @@ export function populateMissingRehearsalDates(
     const hasAttendeeList = evt.attendees && evt.attendees.length > 0;
 
     performers.forEach(p => {
-      const key = `${eventDate}_${p.email.toLowerCase().trim()}`;
-      const calRsvp = attendeeRsvpMap.get(p.email.toLowerCase().trim());
+      const emailLower = p.email.toLowerCase().trim();
+      const key = `${eventDate}_${emailLower}`;
+      const calRsvp = attendeeRsvpMap.get(emailLower);
       const existing = recordMap.get(key);
       const isFuture = eventDate > todayStr;
-      const isInvited = !hasAttendeeList || attendeeRsvpMap.has(p.email.toLowerCase().trim());
+      const isInvited = !hasAttendeeList || attendeeRsvpMap.has(emailLower);
+
+      // If the calendar event has a specific guest list and this performer is NOT invited, do not generate practice row for them
+      if (hasAttendeeList && !isInvited && !existing) {
+        return;
+      }
 
       if (!existing) {
         const rsvpVal = isInvited ? (calRsvp || 'Awaiting') : 'No';

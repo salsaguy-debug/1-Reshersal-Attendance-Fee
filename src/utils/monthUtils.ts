@@ -135,3 +135,17 @@ export function getDerivedMonths(
 
   return result.length > 0 ? result : ['April 2026', 'May 2026', 'June 2026', 'July 2026', 'August 2026', 'September 2026', 'October 2026', 'November 2026', 'December 2026'];
 }
+
+/**
+ * Formats a YYYY-MM-DD date string into standard MM-DD-YYYY format
+ */
+export function formatDisplayDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const trimmed = dateStr.trim();
+  const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) {
+    return `${match[2]}-${match[3]}-${match[1]}`;
+  }
+  return dateStr;
+}
+

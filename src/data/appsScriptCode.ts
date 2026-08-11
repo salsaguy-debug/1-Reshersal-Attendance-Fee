@@ -52,6 +52,7 @@ function onOpen() {
     ui.createMenu('💃 Tradición REV 8')
       .addItem('🔄 Sync Calendar & Form Responses 1', 'syncCalendarAndFormResponses')
       .addSeparator()
+      .addItem('⏰ Setup Twice-Daily Automatic Trigger (12h)', 'setupTwiceDailyTrigger')
       .addItem('🧹 Purge Excluded Performers', 'purgeExclusions')
       .addItem('📊 Rebuild Master Summary', 'rebuildMasterSummary')
       .addSeparator()
@@ -60,6 +61,25 @@ function onOpen() {
   } catch (e) {
     Logger.log('Non-interactive context: UI menu skipped.');
   }
+}
+
+/**
+ * Setup a time-driven trigger to run syncCalendarAndFormResponses twice daily (every 12 hours)
+ */
+function setupTwiceDailyTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(t => {
+    if (t.getHandlerFunction() === 'syncCalendarAndFormResponses') {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+
+  ScriptApp.newTrigger('syncCalendarAndFormResponses')
+    .timeBased()
+    .everyHours(12)
+    .create();
+
+  Logger.log('Successfully installed twice-daily time-driven trigger!');
 }
 
 /**
